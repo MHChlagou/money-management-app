@@ -199,7 +199,7 @@ const fr: Record<Key, string> = {
   'set.install': 'Installer comme application', 'set.installed': 'Vous utilisez l’application installée.',
   'set.ios1': 'Ouvrez cette page dans Safari.', 'set.ios2': 'Touchez le bouton Partager (carré avec une flèche).', 'set.ios3': 'Choisissez Sur l’écran d’accueil, puis Ajouter.',
   'set.android': 'Android (Chrome) : touchez le menu, puis Ajouter à l’écran d’accueil / Installer l’application.', 'set.windows': 'Windows (Edge ou Chrome) : cliquez sur l’icône d’installation à droite de la barre d’adresse, ou menu, Applications, Installer ce site en tant qu’application.',
-  'set.exampleReset': 'Données d’exemple et réinitialisation', 'set.loadExample': 'Charger des données d’exemple', 'set.exampleConfirm': 'Remplacer les données actuelles par les données d’exemple ?', 'set.deleteAll': 'Supprimer toutes les données',
+  'set.exampleReset': 'Données d’exemple et réinitialisation', 'set.loadExample': 'Charger des données d’exemple', 'set.exampleConfirm': 'Remplacer les données actuelles par les données d’exemple ?', 'set.deleteAll': 'Tout supprimer',
   'set.deleteConfirm': 'Supprimer TOUTES les données de cet appareil ? Exportez d’abord une sauvegarde si vous voulez les garder.', 'set.footer': 'Monthly Money. Fonctionne hors ligne, sans compte, sans cloud.',
   'cat.new': 'Nouvelle catégorie', 'cat.edit': 'Modifier la catégorie', 'cat.name': 'Nom', 'cat.namePlaceholder': 'Enfants, Animaux, Café…', 'cat.icon': 'Icône', 'cat.colour': 'Couleur', 'cat.iconA': 'Icône {icon}', 'cat.colourA': 'Couleur {colour}',
   'cat.budget': 'Budget mensuel (facultatif)', 'cat.budgetHint': 'Vous serez prévenu sur les écrans Mois et Analyse en cas de dépassement', 'cat.delete': 'Supprimer la catégorie',
