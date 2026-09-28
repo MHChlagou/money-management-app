@@ -102,8 +102,8 @@ export function RecurringPage() {
                     {credit && (
                       <div className="ml-13 mt-2">
                         <div className="flex justify-between text-[11px] text-slate-500">
-                          <span>{credit.done} of {credit.total} payments made</span>
-                          <span>{credit.left === 0 ? 'Paid off' : <>{money(credit.remaining, true)} left, ends {formatMonth(r.endMonth!, 'short')}</>}</span>
+                          <span>{credit.done} of {credit.total} payments{chargedNow && credit.done > 0 ? ', including this month' : ''}</span>
+                          <span>{credit.left === 0 ? (chargedNow ? 'Last payment this month' : 'Paid off') : <>{money(credit.remaining, true)} to go, ends {formatMonth(r.endMonth!, 'short')}</>}</span>
                         </div>
                         <div className="mt-1 h-1.5 rounded-full bg-slate-900/5 dark:bg-white/10"><div className="h-full rounded-full bg-mint-400" style={{ width: `${credit.ratio * 100}%` }} /></div>
                       </div>

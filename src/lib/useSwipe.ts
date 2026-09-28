@@ -4,7 +4,11 @@ import { useRef } from 'react'
 export const useSwipe = (onLeft: () => void, onRight: () => void) => {
   const start = useRef<{ x: number; y: number } | null>(null)
   return {
-    onTouchStart: (e: React.TouchEvent) => { start.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } },
+    onTouchStart: (e: React.TouchEvent) => {
+      // Ignore gestures inside dialogs, inputs and charts so they never flip the month behind them.
+      if ((e.target as Element).closest('[role="dialog"], input, select, textarea, .recharts-wrapper')) { start.current = null; return }
+      start.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    },
     onTouchEnd: (e: React.TouchEvent) => {
       if (!start.current) return
       const dx = e.changedTouches[0].clientX - start.current.x

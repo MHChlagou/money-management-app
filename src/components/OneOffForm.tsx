@@ -22,7 +22,7 @@ export function OneOffForm({ monthKey, initial, day, onSave, onCancel }: Props) 
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? 'groceries')
   const [date, setDate] = useState(initial?.date ?? defaultDate)
-  const valid = name.trim() && parseAmount(amount) > 0 && date
+  const valid = name.trim() && parseAmount(amount) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(date) && date.startsWith(monthKey)
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (valid) onSave({ id: initial?.id ?? newId(), name: name.trim(), amount: parseAmount(amount), categoryId, date }) }} className="space-y-4">

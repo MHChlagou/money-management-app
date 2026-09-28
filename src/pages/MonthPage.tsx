@@ -5,7 +5,7 @@ import { MonthNav } from '../components/MonthNav'
 import { OneOffForm } from '../components/OneOffForm'
 import { SavingsCard } from '../components/SavingsCard'
 import { setState, useAppState } from '../lib/store'
-import { budgetStatus, categoryById, entriesByDay, getMonth, resolveLines, runway, summarize, type DayEntry, type ResolvedLine } from '../lib/calc'
+import { budgetStatus, categoryById, getMonth, resolveLines, runway, summarize, upcomingPayments, type ResolvedLine } from '../lib/calc'
 import { formatMoney, formatPct, parseAmount } from '../lib/format'
 import { INTERVAL_LABELS, KIND_LABELS, emptyMonth, type MonthRecord, type OneOffExpense } from '../lib/types'
 import { formatDay, pad2 } from '../lib/months'
@@ -30,10 +30,7 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
   const goalMet = sum.income > 0 && sum.savingsRate >= state.savingsGoalPct / 100
   const overBudget = budgetStatus(state, monthKey).filter((b) => b.share > 1)
 
-  const today = new Date().getDate()
-  const upcoming: DayEntry[] = run.isCurrent
-    ? [...entriesByDay(state, monthKey).entries()].filter(([d]) => d >= today && d <= today + 7).flatMap(([, es]) => es).filter((e) => e.source === 'recurring').sort((a, b) => a.day - b.day)
-    : []
+  const upcoming = run.isCurrent ? upcomingPayments(state, 7) : []
 
   const deleteOneOff = (e: OneOffExpense) => {
     updateMonth(monthKey, (m) => ({ ...m, oneOffs: m.oneOffs.filter((x) => x.id !== e.id) }))
@@ -109,7 +106,7 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
           <ul className="divide-y divide-line dark:divide-line-dark">
             {upcoming.map((e) => {
               const c = categoryById(state, e.categoryId)
-              return <Row key={e.id} icon={<CategoryDot icon={c.icon} color={c.color} size="sm" />} title={e.name} subtitle={formatDay(`${monthKey}-${pad2(e.day)}`)} trailing={<Money>{money(e.amount)}</Money>} />
+              return <Row key={`${e.monthKey}-${e.id}`} icon={<CategoryDot icon={c.icon} color={c.color} size="sm" />} title={e.name} subtitle={formatDay(`${e.monthKey}-${pad2(e.day)}`)} trailing={<Money>{money(e.amount)}</Money>} />
             })}
           </ul>
         </Card>

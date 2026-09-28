@@ -4,7 +4,7 @@ import { Button, Card, CategoryDot, cx, Modal, Money, Pill, Row } from '../compo
 import { MonthNav } from '../components/MonthNav'
 import { OneOffForm } from '../components/OneOffForm'
 import { useAppState } from '../lib/store'
-import { categoryById, entriesByDay, summarize } from '../lib/calc'
+import { appliesToMonth, categoryById, entriesByDay, summarize } from '../lib/calc'
 import { formatMoney } from '../lib/format'
 import { currentMonthKey, daysInMonth, firstWeekday, formatDay, pad2 } from '../lib/months'
 import { updateMonth } from './MonthPage'
@@ -27,7 +27,7 @@ export function CalendarPage({ monthKey, onMonthChange }: { monthKey: string; on
   const dayTotal = (d: number) => (byDay.get(d) ?? []).reduce((a, e) => a + e.amount, 0)
   const maxDay = Math.max(1, ...[...byDay.keys()].map(dayTotal))
   const paidSoFar = isCurrent ? [...byDay.entries()].filter(([d]) => d <= today).reduce((a, [, es]) => a + es.reduce((x, e) => x + e.amount, 0), 0) : 0
-  const noDay = state.recurring.filter((r) => r.active && !r.dayOfMonth)
+  const noDay = state.recurring.filter((r) => !r.dayOfMonth && appliesToMonth(r, monthKey))
   const selectedEntries = selected ? (byDay.get(selected) ?? []) : []
 
   return (

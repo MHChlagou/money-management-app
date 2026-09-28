@@ -172,7 +172,7 @@ function ContributionForm({ monthKey, pots, potId, withdraw, onSave, onCancel }:
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(today.startsWith(monthKey) ? today : `${monthKey}-01`)
   const [note, setNote] = useState('')
-  const valid = pot && parseAmount(amount) > 0
+  const valid = pot && parseAmount(amount) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(date)
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (valid) onSave(pot, { id: newId(), date, amount: withdraw ? -parseAmount(amount) : parseAmount(amount), note: note.trim() || undefined }) }} className="space-y-4">
       {!potId && (

@@ -25,7 +25,8 @@ export function RecurringForm({ initial, onSave, onCancel }: Props) {
   const [note, setNote] = useState(initial?.note ?? '')
 
   const dayNum = day ? Number(day) : undefined
-  const valid = name.trim().length > 0 && parseAmount(amount) > 0 && startMonth && (!hasEnd || endMonth >= startMonth) && (dayNum === undefined || (dayNum >= 1 && dayNum <= 31))
+  const isMonthKey = (k: string) => /^\d{4}-(0[1-9]|1[0-2])$/.test(k)
+  const valid = name.trim().length > 0 && parseAmount(amount) > 0 && isMonthKey(startMonth) && (!hasEnd || (isMonthKey(endMonth) && endMonth >= startMonth)) && (dayNum === undefined || (Number.isInteger(dayNum) && dayNum >= 1 && dayNum <= 31))
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()

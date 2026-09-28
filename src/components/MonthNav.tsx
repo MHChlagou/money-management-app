@@ -15,7 +15,6 @@ export function MonthNav({ value, onChange, tone = 'light' }: { value: string; o
   const onDark = tone === 'onDark'
   const btn = cx('inline-flex size-9 items-center justify-center rounded-full', onDark ? 'text-white/80 hover:bg-white/15' : 'text-slate-500 hover:bg-slate-900/5 dark:text-slate-400 dark:hover:bg-white/10')
 
-  useEffect(() => { if (open) setYear(splitKey(value).year) }, [open, value])
   useEffect(() => {
     if (!open) return
     const onDown = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
@@ -27,7 +26,7 @@ export function MonthNav({ value, onChange, tone = 'light' }: { value: string; o
     <div ref={ref} className="relative">
       <div className="flex items-center justify-between">
         <button className={btn} aria-label="Previous month" onClick={() => onChange(shiftMonth(value, -1))}><ChevronLeft size={20} /></button>
-        <button onClick={() => setOpen((o) => !o)} className={cx('flex items-center gap-1 rounded-full px-3 py-1 font-display text-lg font-semibold capitalize', onDark ? 'text-white hover:bg-white/15' : 'hover:bg-slate-900/5 dark:hover:bg-white/10')} aria-haspopup="dialog" aria-expanded={open}>
+        <button onClick={() => { setYear(splitKey(value).year); setOpen((o) => !o) }} className={cx('flex items-center gap-1 rounded-full px-3 py-1 font-display text-lg font-semibold capitalize', onDark ? 'text-white hover:bg-white/15' : 'hover:bg-slate-900/5 dark:hover:bg-white/10')} aria-haspopup="dialog" aria-expanded={open}>
           {formatMonth(value)} <ChevronDown size={16} className="opacity-60" />
         </button>
         <button className={btn} aria-label="Next month" onClick={() => onChange(shiftMonth(value, 1))}><ChevronRight size={20} /></button>
