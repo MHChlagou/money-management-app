@@ -50,7 +50,7 @@ export function SavingsCard({ monthKey }: { monthKey: string }) {
   return (
     <Card>
       <SectionTitle sub={state.pots.length ? t('savings.setAsideMonth', { amount: money(setAside) }) : undefined}
-        action={state.pots.length > 0 && <Button variant="ghost" className="min-h-8 px-2" onClick={() => setContrib({})}><Plus size={14} /> {t('savings.setAside')}</Button>}>
+        action={state.pots.length > 0 && <Button variant="ghost" className="min-h-8 whitespace-nowrap px-2" onClick={() => setContrib({})}><Plus size={14} /> {t('savings.setAside')}</Button>}>
         {t('savings.title')}
       </SectionTitle>
 
