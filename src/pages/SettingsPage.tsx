@@ -81,7 +81,7 @@ export function SettingsPage() {
 
       <Card>
         <SectionTitle>{t('set.prefs')}</SectionTitle>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <span className={labelCls} id="language-label">{t('set.language')}</span>
             <div className="pt-1" aria-labelledby="language-label">
@@ -118,9 +118,9 @@ export function SettingsPage() {
             <li key={c.id}>
               <button className="flex w-full items-center gap-3 py-2 text-left" onClick={() => setEditingCat(c)}>
                 <CategoryDot icon={c.icon} color={c.color} size="sm" />
-                <span className="flex-1 font-medium">{categoryName(c.id, c.name)}</span>
-                <span className="text-xs text-slate-500">{c.budget ? t('set.budget', { amount: c.budget }) : t('set.noBudget')}</span>
-                <ChevronRight size={16} className="text-slate-400" />
+                <span className="min-w-0 flex-1 truncate font-medium">{categoryName(c.id, c.name)}</span>
+                <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">{c.budget ? t('set.budget', { amount: c.budget }) : t('set.noBudget')}</span>
+                <ChevronRight size={16} className="shrink-0 text-slate-400" />
               </button>
             </li>
           ))}
@@ -131,9 +131,9 @@ export function SettingsPage() {
         <SectionTitle>{t('set.backup')}</SectionTitle>
         <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">{t('set.backupText')}</p>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={exportJson}><Download size={16} /> {t('set.export')}</Button>
-          <Button variant="secondary" onClick={() => fileRef.current?.click()}><Upload size={16} /> {t('set.import')}</Button>
-          <Button variant="secondary" onClick={exportCsv}><FileSpreadsheet size={16} /> {t('set.csv')}</Button>
+          <Button className="w-full sm:w-auto" onClick={exportJson}><Download size={16} /> {t('set.export')}</Button>
+          <Button className="w-full sm:w-auto" variant="secondary" onClick={() => fileRef.current?.click()}><Upload size={16} /> {t('set.import')}</Button>
+          <Button className="w-full sm:w-auto" variant="secondary" onClick={exportCsv}><FileSpreadsheet size={16} /> {t('set.csv')}</Button>
           <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) importJson(f); e.target.value = '' }} />
         </div>
         {msg && <p className="mt-3 text-sm text-ink-600 dark:text-ink-200">{msg}</p>}
@@ -153,8 +153,8 @@ export function SettingsPage() {
       <Card>
         <SectionTitle>{t('set.exampleReset')}</SectionTitle>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => { if (confirm(t('set.exampleConfirm'))) { replaceState({ ...sampleState(), language: state.language, userName: state.userName, onboarded: true }); showToast(t('toast.exampleLoaded')) } }}>{t('set.loadExample')}</Button>
-          <Button variant="danger" onClick={reset}><Trash2 size={16} /> {t('set.deleteAll')}</Button>
+          <Button className="w-full sm:w-auto" variant="secondary" onClick={() => { if (confirm(t('set.exampleConfirm'))) { replaceState({ ...sampleState(), language: state.language, userName: state.userName, onboarded: true }); showToast(t('toast.exampleLoaded')) } }}>{t('set.loadExample')}</Button>
+          <Button className="w-full sm:w-auto" variant="danger" onClick={reset}><Trash2 size={16} /> {t('set.deleteAll')}</Button>
         </div>
       </Card>
 

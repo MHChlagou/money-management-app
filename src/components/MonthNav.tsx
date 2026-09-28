@@ -28,7 +28,7 @@ export function MonthNav({ value, onChange, tone = 'light' }: { value: string; o
     <div ref={ref} className="relative">
       <div className="flex items-center justify-between">
         <button className={btn} aria-label={t('nav.prevMonth')} onClick={() => onChange(shiftMonth(value, -1))}><ChevronLeft size={20} /></button>
-        <button onClick={() => { setYear(splitKey(value).year); setOpen((o) => !o) }} className={cx('flex items-center gap-1 rounded-full px-3 py-1 font-display text-lg font-semibold capitalize', onDark ? 'text-white hover:bg-white/15' : 'hover:bg-slate-900/5 dark:hover:bg-white/10')} aria-haspopup="dialog" aria-expanded={open}>
+        <button onClick={() => { setYear(splitKey(value).year); setOpen((o) => !o) }} className={cx('flex min-w-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 font-display text-base font-semibold capitalize sm:px-3 sm:text-lg', onDark ? 'text-white hover:bg-white/15' : 'hover:bg-slate-900/5 dark:hover:bg-white/10')} aria-haspopup="dialog" aria-expanded={open}>
           {formatMonth(value)} <ChevronDown size={16} className="opacity-60" />
         </button>
         <button className={btn} aria-label={t('nav.nextMonth')} onClick={() => onChange(shiftMonth(value, 1))}><ChevronRight size={20} /></button>

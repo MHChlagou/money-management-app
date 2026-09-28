@@ -21,7 +21,7 @@ export function SectionTitle({ children, action, sub }: { children: ReactNode; a
         <h2 className="font-display text-[15px] font-semibold">{children}</h2>
         {sub && <div className="text-xs text-slate-500 dark:text-slate-400">{sub}</div>}
       </div>
-      {action}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   )
 }

@@ -80,8 +80,8 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
           <h2 className="font-display text-base font-semibold">{t('welcome.title')}</h2>
           <p className="mb-3 mt-1 text-sm text-slate-600 dark:text-slate-300">{t('welcome.cardText')}</p>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => goTo('recurring')}>{t('welcome.addRecurring')}</Button>
-            <Button variant="secondary" onClick={() => setState((s) => ({ ...sampleState(), language: s.language, userName: s.userName, onboarded: true }))}>{t('welcome.loadExample')}</Button>
+            <Button className="w-full sm:w-auto" onClick={() => goTo('recurring')}>{t('welcome.addRecurring')}</Button>
+            <Button className="w-full sm:w-auto" variant="secondary" onClick={() => setState((s) => ({ ...sampleState(), language: s.language, userName: s.userName, onboarded: true }))}>{t('welcome.loadExample')}</Button>
           </div>
         </Card>
       )}
