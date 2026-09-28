@@ -94,9 +94,10 @@ export function SettingsPage() {
           <Field label="Default salary" hint="Pre-filled in every month you haven't edited">
             <AmountInput value={salaryDraft} onChange={setSalaryDraft} onBlur={() => setState((s) => ({ ...s, defaultSalary: parseAmount(salaryDraft) }))} />
           </Field>
-          <Field label="Appearance">
-            <div className="pt-1"><Segmented<Theme> value={state.theme} onChange={(theme) => setState((s) => ({ ...s, theme }))} options={[{ value: 'system', label: 'Auto' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} /></div>
-          </Field>
+          <div>
+            <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300" id="appearance-label">Appearance</span>
+            <div className="pt-1" aria-labelledby="appearance-label"><Segmented<Theme> value={state.theme} onChange={(theme) => setState((s) => ({ ...s, theme }))} options={[{ value: 'system', label: 'Auto' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} /></div>
+          </div>
         </div>
       </Card>
 
