@@ -1,0 +1,17 @@
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { registerSW } from 'virtual:pwa-register'
+import './index.css'
+import App from './App.tsx'
+import { applyTheme } from './lib/theme'
+import { getState } from './lib/store'
+
+// Apply the theme before first paint to avoid a light flash in dark mode.
+applyTheme(getState().theme)
+registerSW({ immediate: true })
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
