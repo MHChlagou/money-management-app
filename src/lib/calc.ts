@@ -1,4 +1,4 @@
-import type { AppState, Category, MonthRecord, RecurringItem, RecurringKind } from './types'
+import type { AppState, Category, MonthRecord, RecurringItem, RecurringKind, SavingsPot } from './types'
 import { emptyMonth } from './types'
 import { daysInMonth, lastMonths, monthsBetween, monthsOfYear, splitKey } from './months'
 
@@ -22,6 +22,11 @@ export interface MonthSummary {
   fixed: number
   variable: number
   expenses: number
+  /** Net moved into savings pots this month. */
+  setAside: number
+  /** Income minus expenses: what was not spent, whether or not it went into a pot. */
+  kept: number
+  /** Kept minus what went into pots: what is still free to spend. */
   remaining: number
   savingsRate: number
   /** True when the salary shown is the default, not a value typed for this month. */
@@ -74,13 +79,25 @@ export const summarize = (state: AppState, key: string): MonthSummary => {
   const fixed = sum(resolveLines(state, key).filter((l) => !l.skipped).map((l) => l.amount))
   const variable = sum(month.oneOffs.map((e) => e.amount))
   const expenses = fixed + variable
-  const remaining = income - expenses
+  const setAside = monthSetAside(state, key)
+  const kept = income - expenses
   return {
-    income, salary, fixed, variable, expenses, remaining,
-    savingsRate: income > 0 ? remaining / income : 0,
+    income, salary, fixed, variable, expenses, setAside, kept,
+    remaining: kept - setAside,
+    savingsRate: income > 0 ? kept / income : 0,
     usesDefaultSalary: state.months[key]?.salary === undefined,
   }
 }
+
+/** Net contributions to all pots in a month. */
+export const monthSetAside = (state: AppState, key: string) =>
+  sum(state.pots.flatMap((p) => p.contributions.filter((c) => c.date.startsWith(key)).map((c) => c.amount)))
+
+export const potBalance = (pot: SavingsPot) => sum(pot.contributions.map((c) => c.amount))
+
+export const potMonthTotal = (pot: SavingsPot, key: string) => sum(pot.contributions.filter((c) => c.date.startsWith(key)).map((c) => c.amount))
+
+export const totalSaved = (state: AppState) => sum(state.pots.map(potBalance))
 
 export interface CategoryTotal { category: Category; amount: number; share: number; budget?: number }
 
@@ -199,7 +216,8 @@ export const allTransactions = (state: AppState) => {
   const keys = new Set<string>(Object.keys(state.months))
   // include months where recurring items apply even without a record, within the recorded span
   const sorted = [...keys].sort()
-  const rows: { month: string; date: string; name: string; category: string; type: 'recurring' | 'one-off'; amount: number }[] = []
+  const rows: { month: string; date: string; name: string; category: string; type: 'recurring' | 'one-off' | 'savings'; amount: number }[] = []
+  state.pots.forEach((p) => p.contributions.forEach((c) => rows.push({ month: c.date.slice(0, 7), date: c.date, name: c.note ? `${p.name}: ${c.note}` : p.name, category: 'Savings', type: 'savings', amount: c.amount })))
   for (const key of sorted) {
     resolveLines(state, key).filter((l) => !l.skipped).forEach((l) =>
       rows.push({ month: key, date: `${key}-${String(Math.min(l.dayOfMonth ?? 1, daysInMonth(key))).padStart(2, '0')}`, name: l.name, category: categoryById(state, l.categoryId).name, type: 'recurring', amount: l.amount }))

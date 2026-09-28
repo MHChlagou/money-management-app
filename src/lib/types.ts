@@ -55,10 +55,30 @@ export interface MonthRecord {
   note?: string
 }
 
+/** Money moved into a pot (positive) or taken out (negative). */
+export interface Contribution {
+  id: string
+  /** ISO date "YYYY-MM-DD"; the month it belongs to is derived from it. */
+  date: string
+  amount: number
+  note?: string
+}
+
+/** A named savings goal: emergency fund, holiday, new laptop. */
+export interface SavingsPot {
+  id: string
+  name: string
+  icon: string
+  color: string
+  /** Optional target amount to reach. */
+  target?: number
+  contributions: Contribution[]
+}
+
 export type Theme = 'system' | 'light' | 'dark'
 
 export interface AppState {
-  version: 2
+  version: 3
   currency: string
   /** Target share of income to keep, as a percentage (e.g. 20). */
   savingsGoalPct: number
@@ -68,6 +88,7 @@ export interface AppState {
   categories: Category[]
   recurring: RecurringItem[]
   months: Record<string, MonthRecord>
+  pots: SavingsPot[]
 }
 
 export const KIND_LABELS: Record<RecurringKind, string> = {
@@ -112,7 +133,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
 export const emptyMonth = (): MonthRecord => ({ extraIncome: 0, overrides: {}, oneOffs: [] })
 
 export const emptyState = (): AppState => ({
-  version: 2,
+  version: 3,
   currency: 'EUR',
   savingsGoalPct: 20,
   defaultSalary: 0,
@@ -120,4 +141,5 @@ export const emptyState = (): AppState => ({
   categories: DEFAULT_CATEGORIES.map((c) => ({ ...c })),
   recurring: [],
   months: {},
+  pots: [],
 })

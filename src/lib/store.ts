@@ -61,7 +61,8 @@ export const migrate = (input: unknown): AppState => {
     categories,
     recurring,
     months,
-    version: 2,
+    pots: Array.isArray(raw.pots) ? (raw.pots as AppState['pots']) : [],
+    version: 3,
   }
 }
 

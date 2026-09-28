@@ -4,7 +4,7 @@ import { Card, CategoryDot, cx, Empty, Money, SectionTitle, Segmented } from '..
 import { MonthNav } from '../components/MonthNav'
 import { CategoryDonut, TrendChart, YearChart } from '../components/charts'
 import { useAppState } from '../lib/store'
-import { budgetStatus, byKind, categoryDeltas, resolveLines, summarize, trend, yearTrend } from '../lib/calc'
+import { budgetStatus, byKind, categoryDeltas, potBalance, resolveLines, summarize, totalSaved, trend, yearTrend } from '../lib/calc'
 import { suggestions, type Severity } from '../lib/insights'
 import { formatMoney, formatPct } from '../lib/format'
 import { currentMonthKey, formatMonth, splitKey } from '../lib/months'
@@ -33,6 +33,8 @@ export function InsightsPage({ monthKey, onMonthChange }: { monthKey: string; on
   const projected = yearMonths.some((p) => p.key > currentMonthKey())
   const yearIncome = yearMonths.reduce((a, p) => a + p.summary.income, 0)
   const yearExpenses = yearMonths.reduce((a, p) => a + p.summary.expenses, 0)
+  const yearSetAside = year.reduce((a, p) => a + p.summary.setAside, 0)
+  const saved = totalSaved(state)
 
   return (
     <div className="space-y-3">
@@ -123,7 +125,7 @@ export function InsightsPage({ monthKey, onMonthChange }: { monthKey: string; on
                     <td className="py-0.5">{formatMonth(p.key, 'short')}</td>
                     <td className="text-right">{money(p.summary.income, true)}</td>
                     <td className="text-right">{money(p.summary.expenses, true)}</td>
-                    <td className={cx('text-right', p.summary.remaining < 0 && p.summary.income > 0 && 'text-coral-600 dark:text-coral-400')}>{p.summary.income > 0 ? `${money(p.summary.remaining, true)} (${formatPct(p.summary.savingsRate)})` : '–'}</td>
+                    <td className={cx('text-right', p.summary.kept < 0 && p.summary.income > 0 && 'text-coral-600 dark:text-coral-400')}>{p.summary.income > 0 ? `${money(p.summary.kept, true)} (${formatPct(p.summary.savingsRate)})` : '–'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -141,6 +143,31 @@ export function InsightsPage({ monthKey, onMonthChange }: { monthKey: string; on
           </>
         )}
       </Card>
+
+      {state.pots.length > 0 && (
+        <Card>
+          <SectionTitle sub={`${money(yearSetAside, true)} set aside in ${splitKey(monthKey).year}`}>Savings</SectionTitle>
+          <div className="mb-3 flex items-baseline gap-2">
+            <Money className="text-2xl">{money(saved)}</Money>
+            <span className="text-sm text-slate-500">across {state.pots.length} {state.pots.length === 1 ? 'pot' : 'pots'}</span>
+          </div>
+          <ul className="space-y-2">
+            {state.pots.map((p) => {
+              const b = potBalance(p)
+              return (
+                <li key={p.id}>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CategoryDot icon={p.icon} color={p.color} size="sm" />
+                    <span className="font-medium">{p.name}</span>
+                    <span className="ml-auto"><Money>{money(b, true)}</Money>{p.target && <span className="text-xs text-slate-500"> of {money(p.target, true)}</span>}</span>
+                  </div>
+                  {p.target && <div className="mt-1.5 h-1.5 rounded-full bg-slate-900/5 dark:bg-white/10"><div className="h-full rounded-full" style={{ width: `${Math.min(100, (b / p.target) * 100)}%`, background: p.color }} /></div>}
+                </li>
+              )
+            })}
+          </ul>
+        </Card>
+      )}
 
       <Card>
         <SectionTitle>Fixed costs by type</SectionTitle>

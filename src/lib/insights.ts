@@ -1,6 +1,6 @@
 import type { AppState } from './types'
 import { budgetStatus, byKind, categoryById, resolveLines, summarize, trend, type ResolvedLine } from './calc'
-import { formatMonth, shiftMonth } from './months'
+import { currentMonthKey, formatMonth, shiftMonth } from './months'
 import { formatMoney, formatPct } from './format'
 
 export type Severity = 'good' | 'info' | 'warning' | 'serious'
@@ -19,7 +19,11 @@ export interface InsightContext {
   lines: ResolvedLine[]
   income: number
   expenses: number
+  /** Income minus expenses. */
+  kept: number
+  /** Kept minus what went into savings pots. */
   remaining: number
+  setAside: number
   savingsRate: number
   subscriptionsTotal: number
   creditsTotal: number
@@ -32,7 +36,7 @@ export const buildContext = (state: AppState, monthKey: string): InsightContext 
   const kinds = byKind(lines)
   return {
     state, monthKey, lines,
-    income: s.income, expenses: s.expenses, remaining: s.remaining, savingsRate: s.savingsRate,
+    income: s.income, expenses: s.expenses, kept: s.kept, remaining: s.remaining, setAside: s.setAside, savingsRate: s.savingsRate,
     subscriptionsTotal: kinds.subscription, creditsTotal: kinds.credit,
     money: (n) => formatMoney(n, state.currency, { compact: true }),
   }
@@ -40,7 +44,7 @@ export const buildContext = (state: AppState, monthKey: string): InsightContext 
 
 const builtInRules = (ctx: InsightContext): Suggestion[] => {
   const out: Suggestion[] = []
-  const { state, monthKey, lines, income, remaining, savingsRate, subscriptionsTotal, creditsTotal, money } = ctx
+  const { state, monthKey, lines, income, kept, remaining, setAside, savingsRate, subscriptionsTotal, creditsTotal, money } = ctx
   const goal = state.savingsGoalPct / 100
 
   if (income === 0) {
@@ -48,13 +52,19 @@ const builtInRules = (ctx: InsightContext): Suggestion[] => {
     return out
   }
 
-  if (remaining < 0) {
-    out.push({ id: 'overspend', severity: 'serious', title: 'Spending exceeds income', detail: `You are ${money(-remaining)} over budget this month.` })
+  if (kept < 0) {
+    out.push({ id: 'overspend', severity: 'serious', title: 'Spending exceeds income', detail: `You are ${money(-kept)} over budget this month.` })
   } else if (savingsRate < goal) {
-    const gap = goal * income - remaining
+    const gap = goal * income - kept
     out.push({ id: 'below-goal', severity: 'warning', title: `Below your ${state.savingsGoalPct}% savings goal`, detail: `You keep ${formatPct(savingsRate)}. Trim ${money(gap)} to reach the goal.` })
   } else {
-    out.push({ id: 'on-track', severity: 'good', title: 'Savings goal reached', detail: `You keep ${formatPct(savingsRate)} of your income (${money(remaining)}).` })
+    out.push({ id: 'on-track', severity: 'good', title: 'Savings goal reached', detail: `You keep ${formatPct(savingsRate)} of your income (${money(kept)}).` })
+  }
+
+  if (remaining < 0 && kept >= 0) {
+    out.push({ id: 'pot-too-much', severity: 'warning', title: 'Set aside more than you kept', detail: `${money(setAside)} went into pots but only ${money(kept)} was left after expenses. Consider taking ${money(-remaining)} back out.` })
+  } else if (state.pots.length > 0 && setAside <= 0 && kept > 0 && monthKey <= currentMonthKey()) {
+    out.push({ id: 'pot-nothing', severity: 'info', title: 'Nothing set aside yet', detail: `You kept ${money(kept)} this month. Move some of it into a pot so it doesn't get spent.` })
   }
 
   budgetStatus(state, monthKey).filter((b) => b.share > 1).forEach((b) =>

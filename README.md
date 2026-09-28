@@ -42,6 +42,7 @@ After installing, the app works fully offline and updates itself when you redepl
 ## Features
 
 - **Month**: a runway card with what's left to spend, how much per day for the rest of the month and your savings goal; salary (with a default so you don't retype it), extra income, recurring lines you can skip or adjust for that month, one-off expenses (tap to edit, undo on delete), a note per month, and "next 7 days". Swipe left or right to change month.
+- **Savings pots**: create pots with an optional target (emergency fund, holiday), set money aside or take it out, see history per pot. Money set aside comes off "left to spend" but still counts towards your savings goal.
 - **Calendar**: which day each payment leaves the account, how much is gone so far this month, and what's still to pay. Tap a day to add an expense.
 - **Recurring**: subscriptions, credits and bills with a billing frequency (monthly, quarterly, yearly…), a start and end month, a payment day, and pause/resume. Shows the monthly equivalent and next charge of yearly items, and a payoff progress bar for credits.
 - **Insights**: optimization suggestions, per-category budgets, a category donut with change versus last month, income vs. expenses over six months, and a full-year overview.

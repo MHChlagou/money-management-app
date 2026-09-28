@@ -3,6 +3,7 @@ import { ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { AmountInput, Button, Card, CategoryDot, cx, Empty, Field, IconButton, Modal, Money, Pill, Row, SectionTitle } from '../components/ui'
 import { MonthNav } from '../components/MonthNav'
 import { OneOffForm } from '../components/OneOffForm'
+import { SavingsCard } from '../components/SavingsCard'
 import { setState, useAppState } from '../lib/store'
 import { budgetStatus, categoryById, entriesByDay, getMonth, resolveLines, runway, summarize, type DayEntry, type ResolvedLine } from '../lib/calc'
 import { formatMoney, formatPct, parseAmount } from '../lib/format'
@@ -50,11 +51,14 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
             {money(Math.abs(sum.remaining), true)}
           </div>
           <div className="mt-1.5 text-sm text-white/70">
-            {sum.income > 0 ? <>{money(sum.expenses, true)} spent of {money(sum.income, true)}</> : 'Add your salary below to start'}
+            {sum.income > 0 ? <>{money(sum.expenses, true)} spent{sum.setAside > 0 && <>, {money(sum.setAside, true)} set aside</>} of {money(sum.income, true)}</> : 'Add your salary below to start'}
           </div>
         </div>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/15" role="progressbar" aria-valuenow={Math.round(spentRatio * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Share of income spent">
-          <div className={cx('h-full rounded-full transition-all', sum.remaining < 0 ? 'bg-coral-400' : 'bg-mint-400')} style={{ width: `${spentRatio * 100}%` }} />
+          <div className="flex h-full">
+            <div className={cx('h-full rounded-full transition-all', sum.remaining < 0 ? 'bg-coral-400' : 'bg-mint-400')} style={{ width: `${spentRatio * 100}%` }} />
+            {sum.income > 0 && sum.setAside > 0 && <div className="ml-0.5 h-full rounded-full bg-white/70 transition-all" style={{ width: `${Math.min(1 - spentRatio, sum.setAside / sum.income) * 100}%` }} title="Set aside" />}
+          </div>
         </div>
         {sum.income > 0 && (
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -151,6 +155,8 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
           </ul>
         )}
       </Card>
+
+      <SavingsCard monthKey={monthKey} />
 
       <Card>
         <SectionTitle>Note</SectionTitle>

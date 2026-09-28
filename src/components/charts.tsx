@@ -57,7 +57,7 @@ export function TrendChart({ points, currency, highlight }: { points: TrendPoint
 
 /** Money kept per month across a full year; negative months show in the expenses colour. */
 export function YearChart({ points, currency, highlight }: { points: TrendPoint[]; currency: string; highlight: string }) {
-  const data = points.map((p) => ({ key: p.key, label: monthName(splitKey(p.key).month), Kept: p.summary.income > 0 ? p.summary.remaining : 0 }))
+  const data = points.map((p) => ({ key: p.key, label: monthName(splitKey(p.key).month), Kept: p.summary.income > 0 ? p.summary.kept : 0 }))
   return (
     <div className="h-44 text-slate-500 dark:text-slate-400">
       <ResponsiveContainer width="100%" height="100%">

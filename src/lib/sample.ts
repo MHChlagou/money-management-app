@@ -39,6 +39,14 @@ export const sampleState = (): AppState => {
         { id: 'o5', name: 'Fuel', amount: 70, categoryId: 'transport', date: `${now}-09` },
       ] },
     },
+    pots: [
+      { id: 'p1', name: 'Emergency fund', icon: '🛟', color: '#2a78d6', target: 5000, contributions: [
+        { id: 'c1', date: `${m(-3)}-28`, amount: 400 }, { id: 'c2', date: `${m(-2)}-28`, amount: 400 }, { id: 'c3', date: `${m(-1)}-28`, amount: 300 }, { id: 'c4', date: `${now}-05`, amount: 300 },
+      ] },
+      { id: 'p2', name: 'Holiday', icon: '🏖️', color: '#eda100', target: 1200, contributions: [
+        { id: 'c5', date: `${m(-2)}-28`, amount: 150 }, { id: 'c6', date: `${m(-1)}-28`, amount: 150, note: 'Flights booked' }, { id: 'c7', date: `${m(-1)}-30`, amount: -90, note: 'Deposit paid' },
+      ] },
+    ],
     categories: base.categories.map((c) => (c.id === 'groceries' ? { ...c, budget: 350 } : c.id === 'restaurants' ? { ...c, budget: 100 } : c.id === 'shopping' ? { ...c, budget: 150 } : c)),
   }
 }
