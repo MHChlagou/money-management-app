@@ -76,6 +76,7 @@ export interface SavingsPot {
 }
 
 export type Theme = 'system' | 'light' | 'dark'
+export type Language = 'en' | 'fr'
 
 export interface AppState {
   version: 3
@@ -85,6 +86,11 @@ export interface AppState {
   /** Pre-filled salary for months you have not edited. */
   defaultSalary: number
   theme: Theme
+  language: Language
+  /** Shown in the greeting. Optional. */
+  userName?: string
+  /** True once the first-launch welcome sheet was completed or skipped. */
+  onboarded: boolean
   categories: Category[]
   recurring: RecurringItem[]
   months: Record<string, MonthRecord>
@@ -138,6 +144,8 @@ export const emptyState = (): AppState => ({
   savingsGoalPct: 20,
   defaultSalary: 0,
   theme: 'system',
+  language: typeof navigator !== 'undefined' && /^fr\b/i.test(navigator.language) ? 'fr' : 'en',
+  onboarded: false,
   categories: DEFAULT_CATEGORIES.map((c) => ({ ...c })),
   recurring: [],
   months: {},

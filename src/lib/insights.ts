@@ -2,6 +2,7 @@ import type { AppState } from './types'
 import { budgetStatus, byKind, categoryById, resolveLines, summarize, trend, type ResolvedLine } from './calc'
 import { currentMonthKey, formatMonth, shiftMonth } from './months'
 import { formatMoney, formatPct } from './format'
+import { t } from './i18n'
 
 export type Severity = 'good' | 'info' | 'warning' | 'serious'
 
@@ -48,53 +49,53 @@ const builtInRules = (ctx: InsightContext): Suggestion[] => {
   const goal = state.savingsGoalPct / 100
 
   if (income === 0) {
-    out.push({ id: 'no-income', severity: 'info', title: 'Enter your salary', detail: 'Add this month\'s salary (or a default salary in Settings) to get savings rate and optimization tips.' })
+    out.push({ id: 'no-income', severity: 'info', title: t('rule.noIncome.t'), detail: t('rule.noIncome.d') })
     return out
   }
 
   if (kept < 0) {
-    out.push({ id: 'overspend', severity: 'serious', title: 'Spending exceeds income', detail: `You are ${money(-kept)} over budget this month.` })
+    out.push({ id: 'overspend', severity: 'serious', title: t('rule.overspend.t'), detail: t('rule.overspend.d', { amount: money(-kept) }) })
   } else if (savingsRate < goal) {
     const gap = goal * income - kept
-    out.push({ id: 'below-goal', severity: 'warning', title: `Below your ${state.savingsGoalPct}% savings goal`, detail: `You keep ${formatPct(savingsRate)}. Trim ${money(gap)} to reach the goal.` })
+    out.push({ id: 'below-goal', severity: 'warning', title: t('rule.belowGoal.t', { pct: state.savingsGoalPct }), detail: t('rule.belowGoal.d', { rate: formatPct(savingsRate), gap: money(gap) }) })
   } else {
-    out.push({ id: 'on-track', severity: 'good', title: 'Savings goal reached', detail: `You keep ${formatPct(savingsRate)} of your income (${money(kept)}).` })
+    out.push({ id: 'on-track', severity: 'good', title: t('rule.onTrack.t'), detail: t('rule.onTrack.d', { rate: formatPct(savingsRate), amount: money(kept) }) })
   }
 
   if (remaining < 0 && kept >= 0) {
-    out.push({ id: 'pot-too-much', severity: 'warning', title: 'Set aside more than you kept', detail: `${money(setAside)} went into pots but only ${money(kept)} was left after expenses. Consider taking ${money(-remaining)} back out.` })
+    out.push({ id: 'pot-too-much', severity: 'warning', title: t('rule.potTooMuch.t'), detail: t('rule.potTooMuch.d', { aside: money(setAside), kept: money(kept), back: money(-remaining) }) })
   } else if (state.pots.length > 0 && setAside <= 0 && kept > 0 && monthKey <= currentMonthKey()) {
-    out.push({ id: 'pot-nothing', severity: 'info', title: 'Nothing set aside yet', detail: `You kept ${money(kept)} this month. Move some of it into a pot so it doesn't get spent.` })
+    out.push({ id: 'pot-nothing', severity: 'info', title: t('rule.potNothing.t'), detail: t('rule.potNothing.d', { kept: money(kept) }) })
   }
 
   budgetStatus(state, monthKey).filter((b) => b.share > 1).forEach((b) =>
-    out.push({ id: `budget-${b.category.id}`, severity: 'warning', title: `${b.category.icon} ${b.category.name} over budget`, detail: `${money(b.amount)} spent of a ${money(b.budget!)} budget (${formatPct(b.share)}).` }))
+    out.push({ id: `budget-${b.category.id}`, severity: 'warning', title: t('rule.budget.t', { name: `${b.category.icon} ${b.category.name}` }), detail: t('rule.budget.d', { spent: money(b.amount), budget: money(b.budget!), pct: formatPct(b.share) }) }))
 
   if (subscriptionsTotal / income > 0.1) {
     const subs = lines.filter((l) => l.kind === 'subscription' && !l.skipped)
-    out.push({ id: 'subs-heavy', severity: 'warning', title: 'Subscriptions above 10% of income', detail: `${subs.length} subscriptions cost ${money(subscriptionsTotal)} this month (${formatPct(subscriptionsTotal / income)}). Cancelling the smallest three would free ${money(subs.slice(-3).reduce((a, l) => a + l.amount, 0))}.` })
+    out.push({ id: 'subs-heavy', severity: 'warning', title: t('rule.subs.t'), detail: t('rule.subs.d', { n: subs.length, total: money(subscriptionsTotal), pct: formatPct(subscriptionsTotal / income), free: money(subs.slice(-3).reduce((a, l) => a + l.amount, 0)) }) })
   }
 
   if (creditsTotal / income > 0.35) {
-    out.push({ id: 'debt-heavy', severity: 'serious', title: 'Credit repayments above 35% of income', detail: `Loans take ${formatPct(creditsTotal / income)} of your income. Lenders consider this the ceiling; avoid new credit.` })
+    out.push({ id: 'debt-heavy', severity: 'serious', title: t('rule.debt.t'), detail: t('rule.debt.d', { pct: formatPct(creditsTotal / income) }) })
   }
 
   const endingNext = state.recurring.filter((r) => r.active && r.endMonth && r.endMonth >= monthKey && r.endMonth <= shiftMonth(monthKey, 2))
-  endingNext.forEach((r) => out.push({ id: `ending-${r.id}`, severity: 'good', title: `${r.name} ends in ${formatMonth(r.endMonth!, 'short')}`, detail: `${money(r.amount)}/month will be freed up. Consider redirecting it to savings.` }))
+  endingNext.forEach((r) => out.push({ id: `ending-${r.id}`, severity: 'good', title: t('rule.ending.t', { name: r.name, month: formatMonth(r.endMonth!, 'short') }), detail: t('rule.ending.d', { amount: money(r.amount) }) }))
 
   const yearly = lines.filter((l) => l.intervalMonths > 1 && !l.skipped)
-  yearly.forEach((l) => out.push({ id: `yearly-${l.id}`, severity: 'info', title: `${l.name} is charged this month`, detail: `A ${l.intervalMonths}-month payment of ${money(l.amount)} lands now, not every month.` }))
+  yearly.forEach((l) => out.push({ id: `yearly-${l.id}`, severity: 'info', title: t('rule.yearly.t', { name: l.name }), detail: t('rule.yearly.d', { n: l.intervalMonths, amount: money(l.amount) }) }))
 
   const biggest = lines.find((l) => !l.skipped)
   if (biggest && biggest.amount / income > 0.3) {
-    out.push({ id: 'biggest', severity: 'info', title: `${biggest.name} is your largest cost`, detail: `${money(biggest.amount)} is ${formatPct(biggest.amount / income)} of income. Small wins elsewhere won't move the needle as much as renegotiating this one.` })
+    out.push({ id: 'biggest', severity: 'info', title: t('rule.biggest.t', { name: biggest.name }), detail: t('rule.biggest.d', { amount: money(biggest.amount), pct: formatPct(biggest.amount / income) }) })
   }
 
   const history = trend(state, shiftMonth(monthKey, -1), 3).filter((p) => p.summary.income > 0)
   if (history.length >= 2) {
     const avg = history.reduce((a, p) => a + p.summary.expenses, 0) / history.length
     if (ctx.expenses > avg * 1.15) {
-      out.push({ id: 'spike', severity: 'warning', title: 'Spending is up vs. recent months', detail: `${money(ctx.expenses)} this month vs. an average of ${money(avg)} over the last ${history.length} months.` })
+      out.push({ id: 'spike', severity: 'warning', title: t('rule.spike.t'), detail: t('rule.spike.d', { now: money(ctx.expenses), avg: money(avg), n: history.length }) })
     }
   }
 

@@ -2,6 +2,7 @@ import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
 import type { CategoryTotal, TrendPoint } from '../lib/calc'
 import { formatMoney } from '../lib/format'
 import { formatMonth, monthName, splitKey } from '../lib/months'
+import { t } from '../lib/i18n'
 
 /* Series colours: validated categorical slots 1 & 2. Text and grid use CSS currentColor so dark mode just works. */
 const INCOME = { light: '#2a78d6', dark: '#3987e5' }
@@ -33,7 +34,8 @@ const shortNum = (v: number) => (Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(Mat
 
 /** Grouped bars: income vs expenses per month, with a hover/tap tooltip. */
 export function TrendChart({ points, currency, highlight }: { points: TrendPoint[]; currency: string; highlight: string }) {
-  const data = points.map((p) => ({ key: p.key, label: formatMonth(p.key, 'short'), Income: p.summary.income, Expenses: p.summary.expenses }))
+  const kIncome = t('chart.income'), kExpenses = t('chart.expenses')
+  const data = points.map((p) => ({ key: p.key, label: formatMonth(p.key, 'short'), [kIncome]: p.summary.income, [kExpenses]: p.summary.expenses }))
   return (
     <div className="h-52 text-slate-500 dark:text-slate-400">
       <ResponsiveContainer width="100%" height="100%">
@@ -43,10 +45,10 @@ export function TrendChart({ points, currency, highlight }: { points: TrendPoint
           <YAxis tick={axisStyle} tickLine={false} axisLine={false} width={36} tickFormatter={shortNum} />
           <Tooltip content={<TooltipBox currency={currency} />} cursor={{ fill: 'currentColor', fillOpacity: 0.06 }} />
           <Legend iconType="square" iconSize={10} wrapperStyle={{ fontSize: 12 }} />
-          <Bar dataKey="Income" fill={pick(INCOME)} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+          <Bar dataKey={kIncome} fill={pick(INCOME)} radius={[4, 4, 0, 0]} isAnimationActive={false}>
             {data.map((d) => <Cell key={d.key} fillOpacity={d.key === highlight ? 1 : 0.6} />)}
           </Bar>
-          <Bar dataKey="Expenses" fill={pick(EXPENSES)} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+          <Bar dataKey={kExpenses} fill={pick(EXPENSES)} radius={[4, 4, 0, 0]} isAnimationActive={false}>
             {data.map((d) => <Cell key={d.key} fillOpacity={d.key === highlight ? 1 : 0.6} />)}
           </Bar>
         </BarChart>
@@ -57,7 +59,8 @@ export function TrendChart({ points, currency, highlight }: { points: TrendPoint
 
 /** Money kept per month across a full year; negative months show in the expenses colour. */
 export function YearChart({ points, currency, highlight }: { points: TrendPoint[]; currency: string; highlight: string }) {
-  const data = points.map((p) => ({ key: p.key, label: monthName(splitKey(p.key).month), Kept: p.summary.income > 0 ? p.summary.kept : 0 }))
+  const kKept = t('chart.kept')
+  const data = points.map((p) => ({ key: p.key, label: monthName(splitKey(p.key).month), [kKept]: p.summary.income > 0 ? p.summary.kept : 0 }))
   return (
     <div className="h-44 text-slate-500 dark:text-slate-400">
       <ResponsiveContainer width="100%" height="100%">
@@ -66,8 +69,8 @@ export function YearChart({ points, currency, highlight }: { points: TrendPoint[
           <XAxis dataKey="label" tick={axisStyle} tickLine={false} axisLine={false} interval={0} />
           <YAxis tick={axisStyle} tickLine={false} axisLine={false} width={36} tickFormatter={shortNum} />
           <Tooltip content={<TooltipBox currency={currency} />} cursor={{ fill: 'currentColor', fillOpacity: 0.06 }} />
-          <Bar dataKey="Kept" radius={[4, 4, 0, 0]} isAnimationActive={false}>
-            {data.map((d) => <Cell key={d.key} fill={d.Kept < 0 ? pick(EXPENSES) : pick(KEPT)} fillOpacity={d.key === highlight ? 1 : 0.65} />)}
+          <Bar dataKey={kKept} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+            {data.map((d) => <Cell key={d.key} fill={(d[kKept] as number) < 0 ? pick(EXPENSES) : pick(KEPT)} fillOpacity={d.key === highlight ? 1 : 0.65} />)}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
@@ -81,7 +84,7 @@ export function CategoryDonut({ totals, currency }: { totals: CategoryTotal[]; c
   const rest = totals.slice(6)
   const data = [
     ...top.map((t) => ({ name: `${t.category.icon} ${t.category.name}`, value: t.amount, color: t.category.color })),
-    ...(rest.length ? [{ name: '📦 Other', value: rest.reduce((a, t) => a + t.amount, 0), color: '#94a3b8' }] : []),
+    ...(rest.length ? [{ name: `📦 ${t('ins.other')}`, value: rest.reduce((a, t) => a + t.amount, 0), color: '#94a3b8' }] : []),
   ]
   const total = data.reduce((a, d) => a + d.value, 0)
   return (
@@ -96,7 +99,7 @@ export function CategoryDonut({ totals, currency }: { totals: CategoryTotal[]; c
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-[10px] uppercase tracking-wide text-slate-500">Total</span>
+          <span className="text-[10px] uppercase tracking-wide text-slate-500">{t('ins.total')}</span>
           <span className="text-sm font-semibold tabular-nums">{formatMoney(total, currency, { compact: true })}</span>
         </div>
       </div>

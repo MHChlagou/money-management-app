@@ -9,7 +9,11 @@ const listeners = new Set<() => void>()
 const emit = () => listeners.forEach((l) => l())
 
 export const showToast = (message: string, undo?: () => void, ms = 6000) =>
-  showToastWithAction(message, undo ? { label: 'Undo', run: undo } : undefined, ms)
+  showToastWithAction(message, undo ? { label: undoLabel(), run: undo } : undefined, ms)
+
+let undoLabel = () => 'Undo'
+/** Lets the i18n layer supply the Undo label without a circular import. */
+export const setUndoLabel = (fn: () => string) => { undoLabel = fn }
 
 export const showToastWithAction = (message: string, action?: Toast['action'], ms = 6000) => {
   clearTimeout(timer)

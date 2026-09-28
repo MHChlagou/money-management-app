@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { AmountInput, Button, Field, Input, Select } from './ui'
 import { CategoryPicker } from './CategoryPicker'
-import { INTERVAL_LABELS, KIND_LABELS, type RecurringItem, type RecurringKind } from '../lib/types'
+import { type RecurringItem, type RecurringKind } from '../lib/types'
 import { currentMonthKey } from '../lib/months'
 import { parseAmount } from '../lib/format'
 import { newId } from '../lib/id'
+import { intervalLabel, kindLabel, useT } from '../lib/i18n'
 
 interface Props {
   initial?: RecurringItem
@@ -12,7 +13,11 @@ interface Props {
   onCancel: () => void
 }
 
+const KINDS: RecurringKind[] = ['subscription', 'credit', 'bill', 'other']
+const INTERVALS = [1, 2, 3, 6, 12]
+
 export function RecurringForm({ initial, onSave, onCancel }: Props) {
+  const t = useT()
   const [name, setName] = useState(initial?.name ?? '')
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '')
   const [kind, setKind] = useState<RecurringKind>(initial?.kind ?? 'subscription')
@@ -32,65 +37,51 @@ export function RecurringForm({ initial, onSave, onCancel }: Props) {
     e.preventDefault()
     if (!valid) return
     onSave({
-      id: initial?.id ?? newId(),
-      name: name.trim(),
-      amount: parseAmount(amount),
-      kind,
-      categoryId,
-      intervalMonths: interval,
-      dayOfMonth: dayNum,
-      startMonth,
-      endMonth: hasEnd ? endMonth : undefined,
-      active: initial?.active ?? true,
-      note: note.trim() || undefined,
+      id: initial?.id ?? newId(), name: name.trim(), amount: parseAmount(amount), kind, categoryId,
+      intervalMonths: interval, dayOfMonth: dayNum, startMonth, endMonth: hasEnd ? endMonth : undefined,
+      active: initial?.active ?? true, note: note.trim() || undefined,
     })
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <Field label="Name">
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Netflix, Rent, Car loan…" autoFocus required />
+      <Field label={t('form.name')}>
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('form.namePlaceholder')} autoFocus required />
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Amount">
-          <AmountInput value={amount} onChange={setAmount} required />
-        </Field>
-        <Field label="Billed">
+        <Field label={t('form.amount')}><AmountInput value={amount} onChange={setAmount} required /></Field>
+        <Field label={t('form.billed')}>
           <Select value={interval} onChange={(e) => setInterval(Number(e.target.value))}>
-            {Object.entries(INTERVAL_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            {INTERVALS.map((v) => <option key={v} value={v}>{intervalLabel(v)}</option>)}
           </Select>
         </Field>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Type">
+        <Field label={t('form.type')}>
           <Select value={kind} onChange={(e) => setKind(e.target.value as RecurringKind)}>
-            {(Object.keys(KIND_LABELS) as RecurringKind[]).map((k) => <option key={k} value={k}>{KIND_LABELS[k]}</option>)}
+            {KINDS.map((k) => <option key={k} value={k}>{kindLabel(k)}</option>)}
           </Select>
         </Field>
-        <Field label="Day of month" hint="When it leaves your account">
-          <Input type="number" inputMode="numeric" min={1} max={31} value={day} onChange={(e) => setDay(e.target.value)} placeholder="e.g. 5" />
+        <Field label={t('form.dayOfMonth')} hint={t('form.dayHint')}>
+          <Input type="number" inputMode="numeric" min={1} max={31} value={day} onChange={(e) => setDay(e.target.value)} placeholder={t('form.dayPlaceholder')} />
         </Field>
       </div>
-      <Field label="Category">
-        <CategoryPicker value={categoryId} onChange={setCategoryId} />
-      </Field>
+      <Field label={t('form.category')}><CategoryPicker value={categoryId} onChange={setCategoryId} /></Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label={interval > 1 ? 'First charge' : 'From month'}>
+        <Field label={interval > 1 ? t('form.firstCharge') : t('form.fromMonth')}>
           <Input type="month" value={startMonth} onChange={(e) => setStartMonth(e.target.value)} required />
         </Field>
-        <Field label="Until month" hint={hasEnd ? 'Inclusive' : 'Off = open-ended'}>
+        <Field label={t('form.untilMonth')} hint={hasEnd ? t('form.inclusive') : t('form.openEnded')}>
           <div className="flex items-center gap-2">
-            <input type="checkbox" checked={hasEnd} onChange={(e) => { setHasEnd(e.target.checked); if (e.target.checked && !endMonth) setEndMonth(startMonth) }} className="size-5 accent-ink-600" aria-label="Has end month" />
+            <input type="checkbox" checked={hasEnd} onChange={(e) => { setHasEnd(e.target.checked); if (e.target.checked && !endMonth) setEndMonth(startMonth) }} className="size-5 accent-ink-600" aria-label={t('form.hasEnd')} />
             <Input type="month" value={endMonth} onChange={(e) => setEndMonth(e.target.value)} disabled={!hasEnd} min={startMonth} />
           </div>
         </Field>
       </div>
-      <Field label="Note (optional)">
-        <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Contract ends, cancel before…" />
-      </Field>
+      <Field label={t('common.note')}><Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('form.notePlaceholder')} /></Field>
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button type="submit" disabled={!valid}>{initial ? 'Save changes' : 'Add'}</Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>{t('common.cancel')}</Button>
+        <Button type="submit" disabled={!valid}>{initial ? t('common.saveChanges') : t('common.add')}</Button>
       </div>
     </form>
   )

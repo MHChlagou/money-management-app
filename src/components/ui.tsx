@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react'
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
+import { useT } from '../lib/i18n'
 
 export const cx = (...parts: (string | false | undefined | null)[]) => parts.filter(Boolean).join(' ')
 
@@ -81,6 +82,7 @@ export function Modal({ open, title, onClose, children }: { open: boolean; title
     document.body.style.overflow = 'hidden'
     return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
   }, [open, onClose])
+  const t = useT()
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-950/50 p-0 backdrop-blur-[2px] sm:items-center sm:p-4" onClick={onClose} role="dialog" aria-modal="true" aria-label={title}>
@@ -91,7 +93,7 @@ export function Modal({ open, title, onClose, children }: { open: boolean; title
         <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden dark:bg-slate-600" aria-hidden />
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-lg font-semibold">{title}</h3>
-          <IconButton label="Close" onClick={onClose}><X size={18} /></IconButton>
+          <IconButton label={t('common.close')} onClick={onClose}><X size={18} /></IconButton>
         </div>
         {children}
       </div>
@@ -134,7 +136,7 @@ export function Segmented<T extends string>({ value, options, onChange }: { valu
   return (
     <div className="inline-flex rounded-full bg-slate-900/5 p-1 dark:bg-white/10" role="radiogroup">
       {options.map((o) => (
-        <button key={o.value} role="radio" aria-checked={value === o.value} onClick={() => onChange(o.value)}
+        <button key={o.value} type="button" role="radio" aria-checked={value === o.value} onClick={() => onChange(o.value)}
           className={cx('rounded-full px-3 py-1 text-sm font-medium transition', value === o.value ? 'bg-white text-ink-900 shadow-sm dark:bg-ink-500 dark:text-white' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200')}>
           {o.label}
         </button>

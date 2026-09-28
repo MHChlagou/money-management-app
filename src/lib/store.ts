@@ -62,6 +62,10 @@ export const migrate = (input: unknown): AppState => {
     recurring,
     months,
     pots: Array.isArray(raw.pots) ? (raw.pots as AppState['pots']) : [],
+    language: raw.language === 'fr' || raw.language === 'en' ? raw.language : base.language,
+    userName: typeof raw.userName === 'string' && raw.userName.trim() ? raw.userName.trim() : undefined,
+    // Existing users (anything already saved) skip the welcome sheet; brand-new installs see it.
+    onboarded: typeof raw.onboarded === 'boolean' ? raw.onboarded : version > 0,
     version: 3,
   }
 }

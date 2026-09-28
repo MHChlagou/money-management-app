@@ -1,6 +1,8 @@
+import { getLocale } from './i18n'
+
 export const formatMoney = (amount: number, currency: string, opts: { compact?: boolean } = {}) => {
   try {
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat(getLocale(), {
       style: 'currency',
       currency,
       maximumFractionDigits: opts.compact ? 0 : 2,
@@ -11,7 +13,9 @@ export const formatMoney = (amount: number, currency: string, opts: { compact?: 
   }
 }
 
-export const formatPct = (ratio: number) => `${Math.round(ratio * 100)}%`
+export const formatPct = (ratio: number) => {
+  try { return new Intl.NumberFormat(getLocale(), { style: 'percent', maximumFractionDigits: 0 }).format(ratio) } catch { return `${Math.round(ratio * 100)}%` }
+}
 
 /**
  * Parse user input leniently: "1234.50", "1 234,50", "1,234.56", "1.234,56" and "3,000" all work.

@@ -4,10 +4,12 @@ import { currentMonthKey, formatMonth, monthName, pad2, shiftMonth, splitKey } f
 import { hasData } from '../lib/calc'
 import { useAppState } from '../lib/store'
 import { cx } from './ui'
+import { useT } from '../lib/i18n'
 
 /** Month header with arrows plus a tap-to-open month/year picker. Dots mark months that hold data. */
 export function MonthNav({ value, onChange, tone = 'light' }: { value: string; onChange: (key: string) => void; tone?: 'light' | 'onDark' }) {
   const state = useAppState()
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [year, setYear] = useState(() => splitKey(value).year)
   const ref = useRef<HTMLDivElement>(null)
@@ -25,19 +27,19 @@ export function MonthNav({ value, onChange, tone = 'light' }: { value: string; o
   return (
     <div ref={ref} className="relative">
       <div className="flex items-center justify-between">
-        <button className={btn} aria-label="Previous month" onClick={() => onChange(shiftMonth(value, -1))}><ChevronLeft size={20} /></button>
+        <button className={btn} aria-label={t('nav.prevMonth')} onClick={() => onChange(shiftMonth(value, -1))}><ChevronLeft size={20} /></button>
         <button onClick={() => { setYear(splitKey(value).year); setOpen((o) => !o) }} className={cx('flex items-center gap-1 rounded-full px-3 py-1 font-display text-lg font-semibold capitalize', onDark ? 'text-white hover:bg-white/15' : 'hover:bg-slate-900/5 dark:hover:bg-white/10')} aria-haspopup="dialog" aria-expanded={open}>
           {formatMonth(value)} <ChevronDown size={16} className="opacity-60" />
         </button>
-        <button className={btn} aria-label="Next month" onClick={() => onChange(shiftMonth(value, 1))}><ChevronRight size={20} /></button>
+        <button className={btn} aria-label={t('nav.nextMonth')} onClick={() => onChange(shiftMonth(value, 1))}><ChevronRight size={20} /></button>
       </div>
 
       {open && (
-        <div className="absolute left-1/2 top-full z-30 mt-1 w-72 -translate-x-1/2 rounded-2xl border border-line bg-card p-3 text-slate-900 shadow-xl dark:border-line-dark dark:bg-card-dark dark:text-slate-100" role="dialog" aria-label="Pick a month">
+        <div className="absolute left-1/2 top-full z-30 mt-1 w-72 -translate-x-1/2 rounded-2xl border border-line bg-card p-3 text-slate-900 shadow-xl dark:border-line-dark dark:bg-card-dark dark:text-slate-100" role="dialog" aria-label={t('nav.pickMonth')}>
           <div className="mb-2 flex items-center justify-between">
-            <button className="inline-flex size-9 items-center justify-center rounded-full hover:bg-slate-900/5 dark:hover:bg-white/10" aria-label="Previous year" onClick={() => setYear((y) => y - 1)}><ChevronLeft size={18} /></button>
+            <button className="inline-flex size-9 items-center justify-center rounded-full hover:bg-slate-900/5 dark:hover:bg-white/10" aria-label={t('nav.prevYear')} onClick={() => setYear((y) => y - 1)}><ChevronLeft size={18} /></button>
             <span className="font-display font-semibold">{year}</span>
-            <button className="inline-flex size-9 items-center justify-center rounded-full hover:bg-slate-900/5 dark:hover:bg-white/10" aria-label="Next year" onClick={() => setYear((y) => y + 1)}><ChevronRight size={18} /></button>
+            <button className="inline-flex size-9 items-center justify-center rounded-full hover:bg-slate-900/5 dark:hover:bg-white/10" aria-label={t('nav.nextYear')} onClick={() => setYear((y) => y + 1)}><ChevronRight size={18} /></button>
           </div>
           <div className="grid grid-cols-4 gap-1">
             {Array.from({ length: 12 }, (_, i) => {
@@ -52,7 +54,7 @@ export function MonthNav({ value, onChange, tone = 'light' }: { value: string; o
               )
             })}
           </div>
-          <button onClick={() => { onChange(today); setOpen(false) }} className="mt-2 w-full rounded-xl py-1.5 text-sm font-medium text-ink-600 hover:bg-ink-50 dark:text-ink-200 dark:hover:bg-white/10">Go to this month</button>
+          <button onClick={() => { onChange(today); setOpen(false) }} className="mt-2 w-full rounded-xl py-1.5 text-sm font-medium text-ink-600 hover:bg-ink-50 dark:text-ink-200 dark:hover:bg-white/10">{t('nav.goToday')}</button>
         </div>
       )}
     </div>

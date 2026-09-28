@@ -3,55 +3,53 @@ import { ChevronRight, Download, FileSpreadsheet, Plus, Trash2, Upload } from 'l
 import { AmountInput, Button, Card, CategoryDot, cx, Field, IconButton, Input, Modal, SectionTitle, Segmented, Select } from '../components/ui'
 import { getState, migrate, replaceState, setState, useAppState } from '../lib/store'
 import { allTransactions } from '../lib/calc'
-import { CATEGORY_COLORS, emptyState, type Category, type Theme } from '../lib/types'
+import { CATEGORY_COLORS, emptyState, type Category, type Language, type Theme } from '../lib/types'
 import { parseAmount } from '../lib/format'
 import { sampleState } from '../lib/sample'
 import { showToast } from '../lib/toast'
 import { newId } from '../lib/id'
+import { categoryName, useT } from '../lib/i18n'
+import { CURRENCIES } from '../components/WelcomeSheet'
 
-const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'TND', 'MAD', 'DZD', 'CAD', 'AUD', 'SEK', 'NOK', 'DKK', 'PLN', 'JPY', 'AED', 'SAR']
 const ICONS = ['🏠', '💡', '🛒', '🚗', '🛡️', '🏦', '🎬', '❤️', '🍽️', '🛍️', '✈️', '📦', '📱', '🎓', '👶', '🐶', '💇', '🎁', '☕', '🎮', '📚', '💪', '🧾', '🏷️']
 
 export function SettingsPage() {
   const state = useAppState()
+  const t = useT()
   const fileRef = useRef<HTMLInputElement>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [editingCat, setEditingCat] = useState<Category | 'new' | null>(null)
   const [salaryDraft, setSalaryDraft] = useState(state.defaultSalary ? String(state.defaultSalary) : '')
+  const [nameDraft, setNameDraft] = useState(state.userName ?? '')
 
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify(getState(), null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = Object.assign(document.createElement('a'), { href: url, download: `monthly-money-${new Date().toISOString().slice(0, 10)}.json` })
-    a.click()
+  const download = (content: string, type: string, ext: string) => {
+    const url = URL.createObjectURL(new Blob([content], { type }))
+    Object.assign(document.createElement('a'), { href: url, download: `monthly-money-${new Date().toISOString().slice(0, 10)}.${ext}` }).click()
     URL.revokeObjectURL(url)
   }
-
+  const exportJson = () => download(JSON.stringify(getState(), null, 2), 'application/json', 'json')
   const exportCsv = () => {
     const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`
     const rows = allTransactions(getState())
-    const csv = ['month,date,name,category,type,amount', ...rows.map((r) => [r.month, r.date, r.name, r.category, r.type, r.amount.toFixed(2)].map(esc).join(','))].join('\n')
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
-    Object.assign(document.createElement('a'), { href: url, download: `monthly-money-${new Date().toISOString().slice(0, 10)}.csv` }).click()
-    URL.revokeObjectURL(url)
+    download(['month,date,name,category,type,amount', ...rows.map((r) => [r.month, r.date, r.name, r.category, r.type, r.amount.toFixed(2)].map(esc).join(','))].join('\n'), 'text/csv', 'csv')
   }
 
   const importJson = async (file: File) => {
     try {
       const parsed = JSON.parse(await file.text())
-      if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.recurring) || typeof parsed.months !== 'object') throw new Error('Not a Monthly Money backup')
-      if (!confirm('Replace all current data with this backup?')) return
-      replaceState(migrate(parsed))
-      setMsg('Backup restored.')
+      if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.recurring) || typeof parsed.months !== 'object') throw new Error(t('set.notBackup'))
+      if (!confirm(t('set.replaceConfirm'))) return
+      replaceState({ ...migrate(parsed), onboarded: true })
+      setMsg(t('set.restored'))
     } catch (e) {
-      setMsg(`Import failed: ${(e as Error).message}`)
+      setMsg(t('set.importFailed', { error: (e as Error).message }))
     }
   }
 
   const reset = () => {
-    if (!confirm('Delete ALL data on this device? Export a backup first if you want to keep it.')) return
-    replaceState(emptyState())
-    setMsg('All data cleared.')
+    if (!confirm(t('set.deleteConfirm'))) return
+    replaceState({ ...emptyState(), language: state.language, onboarded: true })
+    setMsg(t('set.cleared'))
   }
 
   const usage = (id: string) =>
@@ -63,7 +61,7 @@ export function SettingsPage() {
   }
   const deleteCategory = (c: Category) => {
     const n = usage(c.id)
-    if (n > 0 && !confirm(`${n} expense(s) use "${c.name}". They will be moved to "Other". Continue?`)) return
+    if (n > 0 && !confirm(t('cat.deleteConfirm', { n, name: categoryName(c.id, c.name) }))) return
     setState((s) => ({
       ...s,
       categories: s.categories.filter((x) => x.id !== c.id),
@@ -75,41 +73,53 @@ export function SettingsPage() {
 
   const isIos = /iP(hone|ad|od)/.test(navigator.userAgent)
   const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
+  const labelCls = 'mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300'
 
   return (
-    <div className="space-y-4">
-      <h1 className="px-1 font-display text-2xl font-bold">Settings</h1>
+    <div className="space-y-3">
+      <h1 className="px-1 font-display text-2xl font-bold">{t('set.heading')}</h1>
 
       <Card>
-        <SectionTitle>Preferences</SectionTitle>
+        <SectionTitle>{t('set.prefs')}</SectionTitle>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Currency">
+          <div>
+            <span className={labelCls} id="language-label">{t('set.language')}</span>
+            <div className="pt-1" aria-labelledby="language-label">
+              <Segmented<Language> value={state.language} onChange={(language) => setState((s) => ({ ...s, language }))} options={[{ value: 'en', label: 'English' }, { value: 'fr', label: 'Français' }]} />
+            </div>
+          </div>
+          <Field label={t('set.name')} hint={t('set.nameHint')}>
+            <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} onBlur={() => setState((s) => ({ ...s, userName: nameDraft.trim() || undefined }))} autoComplete="given-name" />
+          </Field>
+          <Field label={t('set.currency')}>
             <Select value={state.currency} onChange={(e) => setState((s) => ({ ...s, currency: e.target.value }))}>
               {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
             </Select>
           </Field>
-          <Field label="Savings goal (% of income)">
+          <Field label={t('set.goal')}>
             <Input type="number" min={0} max={100} inputMode="numeric" value={state.savingsGoalPct} onChange={(e) => setState((s) => ({ ...s, savingsGoalPct: Math.max(0, Math.min(100, Number(e.target.value) || 0)) }))} />
           </Field>
-          <Field label="Default salary" hint="Pre-filled in every month you haven't edited">
+          <Field label={t('set.defaultSalary')} hint={t('set.defaultSalaryHint')}>
             <AmountInput value={salaryDraft} onChange={setSalaryDraft} onBlur={() => setState((s) => ({ ...s, defaultSalary: parseAmount(salaryDraft) }))} />
           </Field>
           <div>
-            <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300" id="appearance-label">Appearance</span>
-            <div className="pt-1" aria-labelledby="appearance-label"><Segmented<Theme> value={state.theme} onChange={(theme) => setState((s) => ({ ...s, theme }))} options={[{ value: 'system', label: 'Auto' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} /></div>
+            <span className={labelCls} id="appearance-label">{t('set.appearance')}</span>
+            <div className="pt-1" aria-labelledby="appearance-label">
+              <Segmented<Theme> value={state.theme} onChange={(theme) => setState((s) => ({ ...s, theme }))} options={[{ value: 'system', label: t('set.auto') }, { value: 'light', label: t('set.light') }, { value: 'dark', label: t('set.dark') }]} />
+            </div>
           </div>
         </div>
       </Card>
 
       <Card>
-        <SectionTitle sub="Tap one to change its icon, colour or budget" action={<Button variant="ghost" className="min-h-8 px-2" onClick={() => setEditingCat('new')}><Plus size={14} /> New</Button>}>Categories and budgets</SectionTitle>
-        <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+        <SectionTitle sub={t('set.categoriesSub')} action={<Button variant="ghost" className="min-h-8 px-2" onClick={() => setEditingCat('new')}><Plus size={14} /> {t('common.new')}</Button>}>{t('set.categories')}</SectionTitle>
+        <ul className="divide-y divide-line dark:divide-line-dark">
           {state.categories.map((c) => (
             <li key={c.id}>
               <button className="flex w-full items-center gap-3 py-2 text-left" onClick={() => setEditingCat(c)}>
                 <CategoryDot icon={c.icon} color={c.color} size="sm" />
-                <span className="flex-1 font-medium">{c.name}</span>
-                <span className="text-xs text-slate-500">{c.budget ? `budget ${c.budget}` : 'no budget'}</span>
+                <span className="flex-1 font-medium">{categoryName(c.id, c.name)}</span>
+                <span className="text-xs text-slate-500">{c.budget ? t('set.budget', { amount: c.budget }) : t('set.noBudget')}</span>
                 <ChevronRight size={16} className="text-slate-400" />
               </button>
             </li>
@@ -118,52 +128,39 @@ export function SettingsPage() {
       </Card>
 
       <Card>
-        <SectionTitle>Backup</SectionTitle>
-        <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
-          Your data lives only on this device. Export a backup to move it to your phone or keep a safe copy. The spreadsheet export lists every expense for Excel or Google Sheets.
-        </p>
+        <SectionTitle>{t('set.backup')}</SectionTitle>
+        <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">{t('set.backupText')}</p>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={exportJson}><Download size={16} /> Export backup</Button>
-          <Button variant="secondary" onClick={() => fileRef.current?.click()}><Upload size={16} /> Import backup</Button>
-          <Button variant="secondary" onClick={exportCsv}><FileSpreadsheet size={16} /> Spreadsheet (CSV)</Button>
+          <Button onClick={exportJson}><Download size={16} /> {t('set.export')}</Button>
+          <Button variant="secondary" onClick={() => fileRef.current?.click()}><Upload size={16} /> {t('set.import')}</Button>
+          <Button variant="secondary" onClick={exportCsv}><FileSpreadsheet size={16} /> {t('set.csv')}</Button>
           <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) importJson(f); e.target.value = '' }} />
         </div>
         {msg && <p className="mt-3 text-sm text-ink-600 dark:text-ink-200">{msg}</p>}
       </Card>
 
       <Card>
-        <SectionTitle>Install as an app</SectionTitle>
+        <SectionTitle>{t('set.install')}</SectionTitle>
         {standalone ? (
-          <p className="text-sm text-slate-600 dark:text-slate-300">You are using the installed app.</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">{t('set.installed')}</p>
         ) : (
           <ol className="list-decimal space-y-2 pl-5 text-sm text-slate-600 dark:text-slate-300">
-            {isIos ? (
-              <>
-                <li>Open this page in <b>Safari</b>.</li>
-                <li>Tap the <b>Share</b> button (square with an arrow).</li>
-                <li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li>
-              </>
-            ) : (
-              <>
-                <li><b>Android (Chrome):</b> tap the ⋮ menu, then <b>Add to Home screen</b> / <b>Install app</b>.</li>
-                <li><b>Windows (Edge or Chrome):</b> click the install icon at the right of the address bar, or menu → <b>Apps → Install this site as an app</b>.</li>
-              </>
-            )}
+            {isIos ? <><li>{t('set.ios1')}</li><li>{t('set.ios2')}</li><li>{t('set.ios3')}</li></> : <><li>{t('set.android')}</li><li>{t('set.windows')}</li></>}
           </ol>
         )}
       </Card>
 
       <Card>
-        <SectionTitle>Example data & reset</SectionTitle>
+        <SectionTitle>{t('set.exampleReset')}</SectionTitle>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => { if (confirm('Replace current data with example data?')) { replaceState(sampleState()); showToast('Example data loaded') } }}>Load example data</Button>
-          <Button variant="danger" onClick={reset}><Trash2 size={16} /> Delete all data</Button>
+          <Button variant="secondary" onClick={() => { if (confirm(t('set.exampleConfirm'))) { replaceState({ ...sampleState(), language: state.language, userName: state.userName, onboarded: true }); showToast(t('toast.exampleLoaded')) } }}>{t('set.loadExample')}</Button>
+          <Button variant="danger" onClick={reset}><Trash2 size={16} /> {t('set.deleteAll')}</Button>
         </div>
       </Card>
 
-      <p className="text-center text-xs text-slate-400">Monthly Money. Works offline, no account, no cloud.</p>
+      <p className="text-center text-xs text-slate-400">{t('set.footer')}</p>
 
-      <Modal open={editingCat !== null} title={editingCat === 'new' ? 'New category' : 'Edit category'} onClose={() => setEditingCat(null)}>
+      <Modal open={editingCat !== null} title={editingCat === 'new' ? t('cat.new') : t('cat.edit')} onClose={() => setEditingCat(null)}>
         {editingCat && (
           <CategoryForm
             initial={editingCat === 'new' ? undefined : editingCat}
@@ -178,35 +175,36 @@ export function SettingsPage() {
 }
 
 function CategoryForm({ initial, onSave, onDelete, onCancel }: { initial?: Category; onSave: (c: Category) => void; onDelete?: () => void; onCancel: () => void }) {
-  const [name, setName] = useState(initial?.name ?? '')
+  const t = useT()
+  // A default category shows its translated name; editing it stores the user's own name from then on.
+  const [name, setName] = useState(initial ? categoryName(initial.id, initial.name) : '')
   const [icon, setIcon] = useState(initial?.icon ?? '🏷️')
   const [color, setColor] = useState(initial?.color ?? CATEGORY_COLORS[8])
   const [budget, setBudget] = useState(initial?.budget ? String(initial.budget) : '')
   const valid = name.trim().length > 0
+  const finalName = () => (initial && name.trim() === categoryName(initial.id, initial.name) ? initial.name : name.trim())
   return (
-    <form onSubmit={(e) => { e.preventDefault(); if (valid) onSave({ id: initial?.id ?? newId(), name: name.trim(), icon, color, budget: parseAmount(budget) > 0 ? parseAmount(budget) : undefined }) }} className="space-y-4">
+    <form onSubmit={(e) => { e.preventDefault(); if (valid) onSave({ id: initial?.id ?? newId(), name: finalName(), icon, color, budget: parseAmount(budget) > 0 ? parseAmount(budget) : undefined }) }} className="space-y-4">
       <div className="flex items-center gap-3">
         <CategoryDot icon={icon} color={color} size="lg" />
-        <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus placeholder="Kids, Pets, Coffee…" /></Field>
+        <Field label={t('cat.name')}><Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus placeholder={t('cat.namePlaceholder')} /></Field>
       </div>
-      <Field label="Icon">
+      <Field label={t('cat.icon')}>
         <div className="grid grid-cols-8 gap-1">
-          {ICONS.map((i) => <button key={i} type="button" onClick={() => setIcon(i)} className={cx('rounded-lg py-1.5 text-xl', i === icon ? 'bg-ink-50 ring-2 ring-ink-500 dark:bg-ink-500/20' : 'hover:bg-slate-100 dark:hover:bg-slate-800')} aria-label={`Icon ${i}`} aria-pressed={i === icon}>{i}</button>)}
+          {ICONS.map((i) => <button key={i} type="button" onClick={() => setIcon(i)} className={cx('rounded-lg py-1.5 text-xl', i === icon ? 'bg-ink-50 ring-2 ring-ink-500 dark:bg-ink-500/20' : 'hover:bg-slate-900/5 dark:hover:bg-white/10')} aria-label={t('cat.iconA', { icon: i })} aria-pressed={i === icon}>{i}</button>)}
         </div>
       </Field>
-      <Field label="Colour">
+      <Field label={t('cat.colour')}>
         <div className="flex flex-wrap gap-2">
-          {CATEGORY_COLORS.map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={cx('size-8 rounded-full', c === color && 'ring-2 ring-offset-2 ring-ink-600 dark:ring-white dark:ring-offset-card-dark')} style={{ background: c }} aria-label={`Colour ${c}`} aria-pressed={c === color} />)}
+          {CATEGORY_COLORS.map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={cx('size-8 rounded-full', c === color && 'ring-2 ring-ink-600 ring-offset-2 dark:ring-white dark:ring-offset-card-dark')} style={{ background: c }} aria-label={t('cat.colourA', { colour: c })} aria-pressed={c === color} />)}
         </div>
       </Field>
-      <Field label="Monthly budget (optional)" hint="You'll be warned on the Month and Insights screens when you pass it">
-        <AmountInput value={budget} onChange={setBudget} />
-      </Field>
+      <Field label={t('cat.budget')} hint={t('cat.budgetHint')}><AmountInput value={budget} onChange={setBudget} /></Field>
       <div className="flex items-center justify-between gap-2 pt-2">
-        {onDelete ? <IconButton label="Delete category" className="text-coral-600" onClick={onDelete}><Trash2 size={18} /></IconButton> : <span />}
+        {onDelete ? <IconButton label={t('cat.delete')} className="text-coral-600" onClick={onDelete}><Trash2 size={18} /></IconButton> : <span />}
         <div className="flex gap-2">
-          <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
-          <Button type="submit" disabled={!valid}>{initial ? 'Save' : 'Add'}</Button>
+          <Button type="button" variant="secondary" onClick={onCancel}>{t('common.cancel')}</Button>
+          <Button type="submit" disabled={!valid}>{initial ? t('common.save') : t('common.add')}</Button>
         </div>
       </div>
     </form>

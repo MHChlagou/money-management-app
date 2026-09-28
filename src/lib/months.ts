@@ -1,4 +1,5 @@
 /** Month keys are "YYYY-MM" strings: they sort lexicographically, which keeps range checks trivial. */
+import { getLocale } from './i18n'
 
 export const pad2 = (n: number) => String(n).padStart(2, '0')
 
@@ -24,14 +25,14 @@ export const monthsBetween = (a: string, b: string) => {
 
 export const formatMonth = (key: string, style: 'long' | 'short' = 'long') => {
   const { year, month } = splitKey(key)
-  return new Date(year, month - 1, 1).toLocaleDateString(undefined, {
+  return new Date(year, month - 1, 1).toLocaleDateString(getLocale(), {
     month: style === 'long' ? 'long' : 'short',
     year: style === 'long' ? 'numeric' : '2-digit',
   })
 }
 
 export const monthName = (m: number, style: 'long' | 'short' = 'short') =>
-  new Date(2000, m - 1, 1).toLocaleDateString(undefined, { month: style })
+  new Date(2000, m - 1, 1).toLocaleDateString(getLocale(), { month: style })
 
 export const daysInMonth = (key: string) => {
   const { year, month } = splitKey(key)
@@ -50,7 +51,10 @@ export const todayIso = () => {
 }
 
 export const formatDay = (iso: string) =>
-  new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+  new Date(iso + 'T00:00:00').toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' })
+
+/** Short weekday names Monday..Sunday in the current locale. */
+export const weekdayNames = () => Array.from({ length: 7 }, (_, i) => new Date(2024, 0, 1 + i).toLocaleDateString(getLocale(), { weekday: 'short' }).replace(/\.$/, ''))
 
 /** Last N month keys ending at `end`, oldest first. */
 export const lastMonths = (end: string, n: number) =>

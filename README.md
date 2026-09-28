@@ -46,7 +46,8 @@ After installing, the app works fully offline and updates itself when you redepl
 - **Calendar**: which day each payment leaves the account, how much is gone so far this month, and what's still to pay. Tap a day to add an expense.
 - **Recurring**: subscriptions, credits and bills with a billing frequency (monthly, quarterly, yearly…), a start and end month, a payment day, and pause/resume. Shows the monthly equivalent and next charge of yearly items, and a payoff progress bar for credits.
 - **Insights**: optimization suggestions, per-category budgets, a category donut with change versus last month, income vs. expenses over six months, and a full-year overview.
-- **Settings**: currency, savings goal, default salary, light/dark theme, category editor (icon, colour, budget), backup export/import, CSV export for spreadsheets, example data.
+- **Languages**: English and French, chosen on first launch (with your name and currency) or in Settings. Dates, months and amounts follow the language.
+- **Settings**: language, name, currency, savings goal, default salary, light/dark theme, category editor (icon, colour, budget), backup export/import, CSV export for spreadsheets, example data.
 
 New versions show an "Update" prompt inside the app once deployed.
 

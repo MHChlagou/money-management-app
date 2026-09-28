@@ -1,6 +1,7 @@
 import type { AppState, Category, MonthRecord, RecurringItem, RecurringKind, SavingsPot } from './types'
 import { emptyMonth } from './types'
 import { daysInMonth, lastMonths, monthsBetween, monthsOfYear, splitKey } from './months'
+import { categoryName, t } from './i18n'
 
 export interface ResolvedLine {
   id: string
@@ -101,8 +102,10 @@ export const totalSaved = (state: AppState) => sum(state.pots.map(potBalance))
 
 export interface CategoryTotal { category: Category; amount: number; share: number; budget?: number }
 
-export const categoryById = (state: AppState, id: string): Category =>
-  state.categories.find((c) => c.id === id) ?? { id, name: 'Other', icon: '📦', color: '#64748b' }
+export const categoryById = (state: AppState, id: string): Category => {
+  const c = state.categories.find((c) => c.id === id)
+  return c ? { ...c, name: categoryName(c.id, c.name) } : { id, name: categoryName('other', 'Other'), icon: '📦', color: '#64748b' }
+}
 
 export const byCategory = (state: AppState, key: string): CategoryTotal[] => {
   const totals = new Map<string, number>()
@@ -238,7 +241,7 @@ export const allTransactions = (state: AppState) => {
   const span = Math.min(120, monthsBetween(first, last))
   const sorted = Array.from({ length: span + 1 }, (_, i) => shiftMonthKey(first, i))
   const rows: { month: string; date: string; name: string; category: string; type: 'recurring' | 'one-off' | 'savings'; amount: number }[] = []
-  state.pots.forEach((p) => p.contributions.forEach((c) => rows.push({ month: c.date.slice(0, 7), date: c.date, name: c.note ? `${p.name}: ${c.note}` : p.name, category: 'Savings', type: 'savings', amount: c.amount })))
+  state.pots.forEach((p) => p.contributions.forEach((c) => rows.push({ month: c.date.slice(0, 7), date: c.date, name: c.note ? `${p.name}: ${c.note}` : p.name, category: t('cat.savings'), type: 'savings', amount: c.amount })))
   for (const key of sorted) {
     resolveLines(state, key).filter((l) => !l.skipped).forEach((l) =>
       rows.push({ month: key, date: `${key}-${String(Math.min(l.dayOfMonth ?? 1, daysInMonth(key))).padStart(2, '0')}`, name: l.name, category: categoryById(state, l.categoryId).name, type: 'recurring', amount: l.amount }))
