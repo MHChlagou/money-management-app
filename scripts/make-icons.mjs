@@ -44,12 +44,14 @@ const inRoundedRect = (u, v, x, y, w, h, r) => {
   return (u - cx) ** 2 + (v - cy) ** 2 <= r * r
 }
 
-// Design: teal rounded square (or full bleed for maskable) with three rising bars.
+// Design: indigo tile with a mint "runway" bar and a coral coin.
+const inCircle = (u, v, cx, cy, r) => (u - cx) ** 2 + (v - cy) ** 2 <= r * r
 const paint = (fullBleed) => (u, v) => {
-  const bg = [15, 118, 110, 255]
-  if (!fullBleed && !inRoundedRect(u, v, 0, 0, 1, 1, 0.22)) return [0, 0, 0, 0]
-  const bars = [[0.22, 0.53, 0.12, 0.25, [204, 251, 241]], [0.44, 0.38, 0.12, 0.40, [204, 251, 241]], [0.66, 0.22, 0.12, 0.56, [94, 234, 212]]]
-  for (const [x, y, w, h, c] of bars) if (inRoundedRect(u, v, x, y, w, h, 0.03)) return [...c, 255]
+  const bg = [31, 29, 79, 255]
+  if (!fullBleed && !inRoundedRect(u, v, 0, 0, 1, 1, 0.24)) return [0, 0, 0, 0]
+  if (inCircle(u, v, 0.72, 0.34, 0.125)) return [251, 138, 111, 255]
+  if (inRoundedRect(u, v, 0.19, 0.59, 0.41, 0.16, 0.08)) return [69, 212, 146, 255]
+  if (inRoundedRect(u, v, 0.19, 0.59, 0.62, 0.16, 0.08)) return [42, 45, 74, 255]
   return bg
 }
 

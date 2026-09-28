@@ -10,7 +10,7 @@ export function CategoryPicker({ value, onChange }: { value: string; onChange: (
         const selected = c.id === value
         return (
           <button key={c.id} type="button" role="radio" aria-checked={selected} onClick={() => onChange(c.id)}
-            className={cx('flex flex-col items-center gap-1 rounded-xl border p-1.5 text-[11px] leading-tight transition', selected ? 'border-brand-600 bg-brand-50 font-medium text-brand-800 dark:bg-brand-800/30 dark:text-brand-100' : 'border-transparent hover:bg-slate-100 dark:hover:bg-slate-800')}>
+            className={cx('flex flex-col items-center gap-1 rounded-xl border p-1.5 text-[11px] leading-tight transition', selected ? 'border-ink-500 bg-ink-50 font-semibold text-ink-700 dark:bg-ink-500/20 dark:text-ink-100' : 'border-transparent hover:bg-slate-900/5 dark:hover:bg-white/10')}>
             <CategoryDot icon={c.icon} color={c.color} size="sm" />
             <span className="w-full truncate text-center">{c.name}</span>
           </button>

@@ -79,7 +79,7 @@ export function RecurringForm({ initial, onSave, onCancel }: Props) {
         </Field>
         <Field label="Until month" hint={hasEnd ? 'Inclusive' : 'Off = open-ended'}>
           <div className="flex items-center gap-2">
-            <input type="checkbox" checked={hasEnd} onChange={(e) => { setHasEnd(e.target.checked); if (e.target.checked && !endMonth) setEndMonth(startMonth) }} className="size-5 accent-brand-700" aria-label="Has end month" />
+            <input type="checkbox" checked={hasEnd} onChange={(e) => { setHasEnd(e.target.checked); if (e.target.checked && !endMonth) setEndMonth(startMonth) }} className="size-5 accent-ink-600" aria-label="Has end month" />
             <Input type="month" value={endMonth} onChange={(e) => setEndMonth(e.target.value)} disabled={!hasEnd} min={startMonth} />
           </div>
         </Field>

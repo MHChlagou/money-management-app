@@ -147,3 +147,64 @@ export const entriesByDay = (state: AppState, key: string): Map<number, DayEntry
 
 /** Monthly-equivalent cost of a recurring item, for "what does this really cost per month". */
 export const monthlyEquivalent = (item: RecurringItem) => item.amount / (item.intervalMonths || 1)
+
+/** Days left in the month (including today) and the amount that can be spent per day to end at zero. */
+export const runway = (state: AppState, key: string) => {
+  const s = summarize(state, key)
+  const now = new Date()
+  const isCurrent = key === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const daysLeft = isCurrent ? daysInMonth(key) - now.getDate() + 1 : key > `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}` ? daysInMonth(key) : 0
+  return { daysLeft, perDay: daysLeft > 0 ? Math.max(0, s.remaining) / daysLeft : 0, isCurrent }
+}
+
+/** Progress of a credit with an end month: payments made, payments left, remaining balance. */
+export const creditProgress = (item: RecurringItem, nowKey: string) => {
+  if (!item.endMonth) return null
+  const interval = item.intervalMonths || 1
+  const total = Math.floor(monthsBetween(item.startMonth, item.endMonth) / interval) + 1
+  const done = nowKey < item.startMonth ? 0 : Math.min(total, Math.floor(monthsBetween(item.startMonth, nowKey) / interval) + (appliesToMonth(item, nowKey) ? 0 : 1))
+  const left = Math.max(0, total - done)
+  return { total, done, left, remaining: left * item.amount, ratio: total > 0 ? done / total : 0 }
+}
+
+/** Next month key on or after `fromKey` in which the item is charged, or null if it has ended. */
+export const nextCharge = (item: RecurringItem, fromKey: string): string | null => {
+  if (!item.active) return null
+  const interval = item.intervalMonths || 1
+  let key = item.startMonth
+  if (fromKey > key) {
+    const steps = Math.ceil(monthsBetween(item.startMonth, fromKey) / interval)
+    key = shiftMonthKey(item.startMonth, steps * interval)
+  }
+  return item.endMonth && key > item.endMonth ? null : key
+}
+
+const shiftMonthKey = (key: string, delta: number) => {
+  const { year, month } = splitKey(key)
+  const d = new Date(year, month - 1 + delta, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+/** Category totals with the change versus the previous month. */
+export const categoryDeltas = (state: AppState, key: string) => {
+  const prev = new Map(byCategory(state, shiftMonthKey(key, -1)).map((c) => [c.category.id, c.amount]))
+  return byCategory(state, key).map((c) => {
+    const before = prev.get(c.category.id) ?? 0
+    return { ...c, before, delta: c.amount - before, deltaRatio: before > 0 ? (c.amount - before) / before : null }
+  })
+}
+
+/** Flat list of every expense line across all months, for CSV export. */
+export const allTransactions = (state: AppState) => {
+  const keys = new Set<string>(Object.keys(state.months))
+  // include months where recurring items apply even without a record, within the recorded span
+  const sorted = [...keys].sort()
+  const rows: { month: string; date: string; name: string; category: string; type: 'recurring' | 'one-off'; amount: number }[] = []
+  for (const key of sorted) {
+    resolveLines(state, key).filter((l) => !l.skipped).forEach((l) =>
+      rows.push({ month: key, date: `${key}-${String(Math.min(l.dayOfMonth ?? 1, daysInMonth(key))).padStart(2, '0')}`, name: l.name, category: categoryById(state, l.categoryId).name, type: 'recurring', amount: l.amount }))
+    getMonth(state, key).oneOffs.forEach((e) =>
+      rows.push({ month: key, date: e.date, name: e.name, category: categoryById(state, e.categoryId).name, type: 'one-off', amount: e.amount }))
+  }
+  return rows.sort((a, b) => a.date.localeCompare(b.date))
+}

@@ -12,14 +12,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['apple-touch-icon.png', 'favicon.svg'],
       manifest: {
         name: 'Monthly Money',
         short_name: 'Money',
         description: 'Track salary, subscriptions, credits and expenses month by month.',
-        theme_color: '#0f766e',
-        background_color: '#f8fafc',
+        theme_color: '#1f1d4f',
+        background_color: '#f2f3fa',
         display: 'standalone',
         orientation: 'portrait',
         start_url: base,

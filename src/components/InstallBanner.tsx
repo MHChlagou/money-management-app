@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Download, X } from 'lucide-react'
 import { Button } from './ui'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -19,10 +20,11 @@ export function InstallBanner() {
 
   if (!evt || hidden) return null
   return (
-    <div className="mb-4 flex items-center gap-3 rounded-2xl bg-brand-700 p-3 text-white">
-      <div className="flex-1 text-sm">Install Monthly Money for quick access and offline use.</div>
-      <Button variant="secondary" className="min-h-8 px-3" onClick={async () => { await evt.prompt(); setEvt(null) }}>Install</Button>
-      <button aria-label="Dismiss" className="p-1 opacity-80" onClick={() => { sessionStorage.setItem('install-dismissed', '1'); setHidden(true) }}>✕</button>
+    <div className="mb-3 flex items-center gap-3 rounded-2xl border border-line bg-card p-3 text-sm dark:border-line-dark dark:bg-card-dark">
+      <Download size={18} className="shrink-0 text-ink-600 dark:text-ink-200" />
+      <div className="flex-1">Install for quick access and offline use.</div>
+      <Button className="min-h-8 px-3" onClick={async () => { await evt.prompt(); setEvt(null) }}>Install</Button>
+      <button aria-label="Dismiss" className="p-1 text-slate-400" onClick={() => { sessionStorage.setItem('install-dismissed', '1'); setHidden(true) }}><X size={16} /></button>
     </div>
   )
 }

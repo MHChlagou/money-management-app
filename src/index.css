@@ -1,15 +1,46 @@
 @import "tailwindcss";
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource-variable/space-grotesk";
 
 /* Dark mode is driven by a data attribute set in JS (system / light / dark setting). */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  --color-brand-50: #f0fdfa;
-  --color-brand-100: #ccfbf1;
-  --color-brand-500: #14b8a6;
-  --color-brand-600: #0d9488;
-  --color-brand-700: #0f766e;
-  --color-brand-800: #115e59;
+  --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk Variable", "DM Sans Variable", ui-sans-serif, sans-serif;
+
+  /* Ink: deep indigo for the hero and primary actions */
+  --color-ink-50: #eef0fb;
+  --color-ink-100: #dfe2f7;
+  --color-ink-200: #c3c8ef;
+  --color-ink-500: #5b5bd6;
+  --color-ink-600: #4b48c9;
+  --color-ink-700: #3c3aa8;
+  --color-ink-900: #1f1d4f;
+  --color-ink-950: #14132f;
+
+  /* Mint: money kept. Coral: money out. */
+  --color-mint-100: #d6f7e6;
+  --color-mint-300: #7ee2b0;
+  --color-mint-400: #45d492;
+  --color-mint-600: #159a5f;
+  --color-mint-700: #0f7a4b;
+  --color-coral-100: #ffe1da;
+  --color-coral-400: #fb8a6f;
+  --color-coral-500: #f4664a;
+  --color-coral-600: #d9492e;
+
+  /* Surfaces */
+  --color-paper: #f2f3fa;
+  --color-card: #ffffff;
+  --color-line: #e5e7f2;
+  --color-paper-dark: #0e0f1e;
+  --color-card-dark: #181a30;
+  --color-line-dark: #2a2d4a;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
 }
 
 html {
@@ -20,13 +51,22 @@ html {
 html[data-theme="dark"] { color-scheme: dark; }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  @apply bg-paper text-slate-900 antialiased dark:bg-paper-dark dark:text-slate-100;
+  font-family: var(--font-sans);
   overscroll-behavior-y: none;
 }
+
+.font-display { font-family: var(--font-display); font-variant-numeric: tabular-nums; }
+.tnum { font-variant-numeric: tabular-nums; }
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+:focus-visible { outline: 2px solid var(--color-ink-500); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
 
 .recharts-tooltip-wrapper { outline: none; }

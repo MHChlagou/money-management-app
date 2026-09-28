@@ -6,7 +6,7 @@ const media = () => window.matchMedia('(prefers-color-scheme: dark)')
 export const applyTheme = (theme: Theme) => {
   const dark = theme === 'dark' || (theme === 'system' && media().matches)
   document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0f172a' : '#0f766e')
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0e0f1e' : '#1f1d4f')
 }
 
 export const watchSystemTheme = (getTheme: () => Theme) => {
