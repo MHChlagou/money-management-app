@@ -13,6 +13,12 @@ export const formatMoney = (amount: number, currency: string, opts: { compact?: 
   }
 }
 
+/** Full precision for ordinary amounts, no decimals once the string gets long (six figures and up). */
+export const formatMoneyFit = (amount: number, currency: string) => {
+  const full = formatMoney(amount, currency)
+  return full.length > 11 ? formatMoney(amount, currency, { compact: true }) : full
+}
+
 export const formatPct = (ratio: number) => {
   try { return new Intl.NumberFormat(getLocale(), { style: 'percent', maximumFractionDigits: 0 }).format(ratio) } catch { return `${Math.round(ratio * 100)}%` }
 }

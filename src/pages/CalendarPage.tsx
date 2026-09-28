@@ -5,7 +5,7 @@ import { MonthNav } from '../components/MonthNav'
 import { OneOffForm } from '../components/OneOffForm'
 import { useAppState } from '../lib/store'
 import { appliesToMonth, categoryById, entriesByDay, summarize } from '../lib/calc'
-import { formatMoney } from '../lib/format'
+import { formatMoney, formatMoneyFit } from '../lib/format'
 import { currentMonthKey, daysInMonth, firstWeekday, formatDay, pad2, weekdayNames } from '../lib/months'
 import { updateMonth } from './MonthPage'
 import { useT } from '../lib/i18n'
@@ -36,14 +36,14 @@ export function CalendarPage({ monthKey, onMonthChange }: { monthKey: string; on
       <Card className="py-3"><MonthNav value={monthKey} onChange={onMonthChange} /></Card>
 
       {isCurrent && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 max-[359px]:grid-cols-1">
           <Card>
             <div className="text-xs text-slate-500">{t('cal.goneOut')}</div>
-            <Money className="text-xl">{money(paidSoFar, false)}</Money>
+            <Money className={money(paidSoFar).length > 11 ? 'text-base' : 'text-xl'}>{money(paidSoFar)}</Money>
           </Card>
           <Card>
             <div className="text-xs text-slate-500">{t('cal.stillToPay')}</div>
-            <Money className="text-xl text-coral-600 dark:text-coral-400">{money(Math.max(0, sum.expenses - paidSoFar), false)}</Money>
+            <Money className={cx('text-coral-600 dark:text-coral-400', money(Math.max(0, sum.expenses - paidSoFar)).length > 11 ? 'text-base' : 'text-xl')}>{money(Math.max(0, sum.expenses - paidSoFar))}</Money>
           </Card>
         </div>
       )}
@@ -91,7 +91,7 @@ export function CalendarPage({ monthKey, onMonthChange }: { monthKey: string; on
               <ul className="divide-y divide-line dark:divide-line-dark">
                 {selectedEntries.map((e) => {
                   const c = categoryById(state, e.categoryId)
-                  return <Row key={e.id} icon={<CategoryDot icon={c.icon} color={c.color} size="sm" />} title={<>{e.name}<Pill tone={e.source === 'recurring' ? 'brand' : 'neutral'}>{e.source === 'recurring' ? t('src.recurring') : t('src.oneoff')}</Pill></>} subtitle={c.name} trailing={<Money>{money(e.amount, false)}</Money>} />
+                  return <Row key={e.id} icon={<CategoryDot icon={c.icon} color={c.color} size="sm" />} title={e.name} badges={<Pill tone={e.source === 'recurring' ? 'brand' : 'neutral'}>{e.source === 'recurring' ? t('src.recurring') : t('src.oneoff')}</Pill>} subtitle={c.name} trailing={<Money>{formatMoneyFit(e.amount, state.currency)}</Money>} />
                 })}
               </ul>
             )}

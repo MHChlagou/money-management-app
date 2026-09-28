@@ -4,7 +4,7 @@ import { Button, Card, CategoryDot, cx, Empty, Input, Modal, Money, Pill, Sectio
 import { RecurringForm } from '../components/RecurringForm'
 import { setState, useAppState } from '../lib/store'
 import { type RecurringItem, type RecurringKind } from '../lib/types'
-import { formatMoney } from '../lib/format'
+import { formatMoney, formatMoneyFit } from '../lib/format'
 import { currentMonthKey, formatMonth } from '../lib/months'
 import { appliesToMonth, categoryById, creditProgress, monthlyEquivalent, nextCharge } from '../lib/calc'
 import { showToast } from '../lib/toast'
@@ -18,6 +18,7 @@ export function RecurringPage() {
   const [editing, setEditing] = useState<RecurringItem | 'new' | null>(null)
   const [query, setQuery] = useState('')
   const money = (n: number, compact = false) => formatMoney(n, state.currency, { compact })
+  const fit = (n: number) => formatMoneyFit(n, state.currency)
   const now = currentMonthKey()
 
   const save = (item: RecurringItem) => {
@@ -81,27 +82,27 @@ export function RecurringPage() {
                       <CategoryDot icon={c.icon} color={c.color} />
                       <button className="min-w-0 flex-1 text-left" onClick={() => setEditing(r)}>
                         <div className="flex flex-wrap items-center gap-1.5 font-medium leading-tight">
-                          {r.name}
+                          <span className="line-clamp-2 break-words">{r.name}</span>
                           {!r.active && <Pill>{t('pill.paused')}</Pill>}
                           {r.active && !isLive(r) && <Pill tone="warn">{r.endMonth && r.endMonth < now ? t('pill.ended') : t('pill.starts', { month: formatMonth(r.startMonth, 'short') })}</Pill>}
                           {r.endMonth && isLive(r) && !credit && <Pill tone="brand">{t('pill.until', { month: formatMonth(r.endMonth, 'short') })}</Pill>}
                           {r.intervalMonths > 1 && <Pill tone={chargedNow ? 'warn' : 'neutral'}>{intervalLabel(r.intervalMonths)}</Pill>}
                         </div>
-                        <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
                           {c.name}{r.dayOfMonth ? `, ${t('recurring.day', { n: r.dayOfMonth })}` : ''}{next && next !== now ? `, ${t('recurring.next', { month: formatMonth(next, 'short') })}` : chargedNow && r.intervalMonths > 1 ? `, ${t('recurring.chargedNow')}` : ''}{r.note ? `. ${r.note}` : ''}
                         </div>
                       </button>
-                      <div className="text-right">
-                        <Money>{money(r.amount)}</Money>
+                      <div className="shrink-0 text-right">
+                        <Money>{fit(r.amount)}</Money>
                         {r.intervalMonths > 1 && <div className="whitespace-nowrap text-[11px] text-slate-500">{t('common.perMonth', { amount: money(monthlyEquivalent(r), true) })}</div>}
                       </div>
-                      <button onClick={() => toggle(r)} className="inline-flex size-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-900/5 dark:hover:bg-white/10" aria-label={r.active ? t('rec.pauseA', { name: r.name }) : t('rec.resumeA', { name: r.name })} title={r.active ? t('rec.pause') : t('rec.resume')}>
+                      <button onClick={() => toggle(r)} className="inline-flex size-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-900/5 max-[359px]:hidden dark:hover:bg-white/10" aria-label={r.active ? t('rec.pauseA', { name: r.name }) : t('rec.resumeA', { name: r.name })} title={r.active ? t('rec.pause') : t('rec.resume')}>
                         {r.active ? <Pause size={16} /> : <Play size={16} />}
                       </button>
                     </div>
                     {credit && (
                       <div className="ml-13 mt-2">
-                        <div className="flex justify-between text-[11px] text-slate-500">
+                        <div className="flex flex-wrap justify-between gap-x-3 text-[11px] text-slate-500">
                           <span>{t('rec.payments', { done: credit.done, total: credit.total })}{chargedNow && credit.done > 0 ? t('rec.inclThisMonth') : ''}</span>
                           <span>{credit.left === 0 ? (chargedNow ? t('rec.lastPayment') : t('rec.paidOff')) : t('rec.toGo', { amount: money(credit.remaining, true), month: formatMonth(r.endMonth!, 'short') })}</span>
                         </div>
@@ -121,7 +122,8 @@ export function RecurringPage() {
           <>
             <RecurringForm initial={editing === 'new' ? undefined : editing} onSave={save} onCancel={() => setEditing(null)} />
             {editing !== 'new' && (
-              <div className="mt-4 border-t border-line pt-3 text-right dark:border-line-dark">
+              <div className="mt-4 flex items-center justify-between border-t border-line pt-3 dark:border-line-dark">
+                <Button variant="secondary" onClick={() => { toggle(editing); setEditing(null) }}>{editing.active ? <Pause size={16} /> : <Play size={16} />} {editing.active ? t('rec.pause') : t('rec.resume')}</Button>
                 <Button variant="danger" onClick={() => remove(editing)}>{t('common.delete')}</Button>
               </div>
             )}

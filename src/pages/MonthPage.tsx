@@ -6,7 +6,7 @@ import { OneOffForm } from '../components/OneOffForm'
 import { SavingsCard } from '../components/SavingsCard'
 import { setState, useAppState } from '../lib/store'
 import { budgetStatus, categoryById, getMonth, resolveLines, runway, summarize, upcomingPayments, type ResolvedLine } from '../lib/calc'
-import { formatMoney, formatPct, parseAmount } from '../lib/format'
+import { formatMoney, formatMoneyFit, formatPct, parseAmount } from '../lib/format'
 import { emptyMonth, type MonthRecord, type OneOffExpense } from '../lib/types'
 import { formatDay, pad2 } from '../lib/months'
 import { showToast } from '../lib/toast'
@@ -24,6 +24,7 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
   const sum = summarize(state, monthKey)
   const run = runway(state, monthKey)
   const money = (n: number, compact = false) => formatMoney(n, state.currency, { compact })
+  const fit = (n: number) => formatMoneyFit(n, state.currency)
   const [editingLine, setEditingLine] = useState<ResolvedLine | null>(null)
   const [oneOffModal, setOneOffModal] = useState<'new' | OneOffExpense | null>(null)
   const isEmptyApp = state.recurring.length === 0 && Object.keys(state.months).length === 0 && state.defaultSalary === 0
@@ -47,7 +48,7 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
         <div className="mt-4 px-1">
           {state.userName && <div className="mb-1 text-sm font-medium text-white/90">{greeting(state.userName)}</div>}
           <div className="text-sm text-white/70">{sum.remaining < 0 ? t('hero.over') : t('hero.left')}</div>
-          <div className={cx('font-display text-[44px] font-bold leading-none tracking-tight', sum.remaining < 0 ? 'text-coral-400' : 'text-mint-300')}>
+          <div className={cx('font-display font-bold leading-none tracking-tight', money(Math.abs(sum.remaining), true).length > 11 ? 'text-[32px]' : 'text-[44px]', sum.remaining < 0 ? 'text-coral-400' : 'text-mint-300')}>
             {money(Math.abs(sum.remaining), true)}
           </div>
           <div className="mt-1.5 text-sm text-white/70">
@@ -109,7 +110,7 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
           <ul className="divide-y divide-line dark:divide-line-dark">
             {upcoming.map((e) => {
               const c = categoryById(state, e.categoryId)
-              return <Row key={`${e.monthKey}-${e.id}`} icon={<CategoryDot icon={c.icon} color={c.color} size="sm" />} title={e.name} subtitle={formatDay(`${e.monthKey}-${pad2(e.day)}`)} trailing={<Money>{money(e.amount)}</Money>} />
+              return <Row key={`${e.monthKey}-${e.id}`} icon={<CategoryDot icon={c.icon} color={c.color} size="sm" />} title={e.name} subtitle={formatDay(`${e.monthKey}-${pad2(e.day)}`)} trailing={<Money>{fit(e.amount)}</Money>} />
             })}
           </ul>
         </Card>
@@ -126,9 +127,9 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
               return (
                 <Row key={l.id} muted={l.skipped} onClick={() => setEditingLine(l)}
                   icon={<CategoryDot icon={c.icon} color={c.color} size="sm" />}
-                  title={<>{l.name}{l.isLastMonth && <Pill tone="good">{t('pill.lastOne')}</Pill>}{l.amount !== l.defaultAmount && <Pill tone="warn">{t('pill.edited')}</Pill>}{l.intervalMonths > 1 && <Pill tone="brand">{intervalLabel(l.intervalMonths)}</Pill>}</>}
+                  title={l.name} badges={<>{l.isLastMonth && <Pill tone="good">{t('pill.lastOne')}</Pill>}{l.amount !== l.defaultAmount && <Pill tone="warn">{t('pill.edited')}</Pill>}{l.intervalMonths > 1 && <Pill tone="brand">{intervalLabel(l.intervalMonths)}</Pill>}</>}
                   subtitle={`${kindLabel(l.kind)}, ${c.name}${l.dayOfMonth ? `, ${t('recurring.day', { n: l.dayOfMonth })}` : ''}`}
-                  trailing={<Money>{money(l.amount)}</Money>}>
+                  trailing={<Money>{fit(l.amount)}</Money>}>
                   <input type="checkbox" checked={!l.skipped}
                     onChange={(e) => updateMonth(monthKey, (m) => ({ ...m, overrides: { ...m.overrides, [l.id]: { ...m.overrides[l.id], skipped: !e.target.checked } } }))}
                     className="size-5 shrink-0 accent-ink-600" aria-label={t('recurring.include', { name: l.name })} />
@@ -149,7 +150,7 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
               const c = categoryById(state, e.categoryId)
               return (
                 <Row key={e.id} onClick={() => setOneOffModal(e)} icon={<CategoryDot icon={c.icon} color={c.color} size="sm" />} title={e.name} subtitle={`${formatDay(e.date)}, ${c.name}`}
-                  trailing={<><Money>{money(e.amount)}</Money><IconButton label={t('oneoff.deleteA', { name: e.name })} className="-mr-2 hover:text-coral-600" onClick={() => deleteOneOff(e)}><Trash2 size={16} /></IconButton></>} />
+                  trailing={<><Money>{fit(e.amount)}</Money><IconButton label={t('oneoff.deleteA', { name: e.name })} className="-mr-2 hover:text-coral-600" onClick={() => deleteOneOff(e)}><Trash2 size={16} /></IconButton></>} />
               )
             })}
           </ul>

@@ -17,7 +17,7 @@ export function Card({ children, className }: { children: ReactNode; className?:
 export function SectionTitle({ children, action, sub }: { children: ReactNode; action?: ReactNode; sub?: ReactNode }) {
   return (
     <div className="mb-3 flex items-start justify-between gap-2">
-      <div>
+      <div className="min-w-0">
         <h2 className="font-display text-[15px] font-semibold">{children}</h2>
         {sub && <div className="text-xs text-slate-500 dark:text-slate-400">{sub}</div>}
       </div>
@@ -48,7 +48,7 @@ export function IconButton({ label, className, ...props }: ButtonHTMLAttributes<
   return <button {...props} aria-label={label} title={label} className={cx('inline-flex size-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-900/5 dark:text-slate-400 dark:hover:bg-white/10', className)} />
 }
 
-const fieldBase = 'w-full min-h-11 rounded-xl border border-line bg-white px-3 text-base text-slate-900 outline-none placeholder:text-slate-400 focus:border-ink-500 focus:ring-2 focus:ring-ink-500/20 disabled:opacity-50 dark:border-line-dark dark:bg-paper-dark dark:text-slate-100'
+const fieldBase = 'w-full min-w-0 min-h-11 rounded-xl border border-line bg-white px-3 text-base text-slate-900 outline-none placeholder:text-slate-400 focus:border-ink-500 focus:ring-2 focus:ring-ink-500/20 disabled:opacity-50 dark:border-line-dark dark:bg-paper-dark dark:text-slate-100'
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cx(fieldBase, className)} />
@@ -92,7 +92,7 @@ export function Modal({ open, title, onClose, children }: { open: boolean; title
       >
         <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden dark:bg-slate-600" aria-hidden />
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-display text-lg font-semibold">{title}</h3>
+          <h3 className="line-clamp-2 min-w-0 break-words font-display text-lg font-semibold">{title}</h3>
           <IconButton label={t('common.close')} onClick={onClose}><X size={18} /></IconButton>
         </div>
         {children}
@@ -146,15 +146,15 @@ export function Segmented<T extends string>({ value, options, onChange }: { valu
 }
 
 /** Simple list row: icon, title/subtitle, trailing content. */
-export function Row({ icon, title, subtitle, trailing, onClick, muted, children }: { icon?: ReactNode; title: ReactNode; subtitle?: ReactNode; trailing?: ReactNode; onClick?: () => void; muted?: boolean; children?: ReactNode }) {
+export function Row({ icon, title, badges, subtitle, trailing, onClick, muted, children }: { icon?: ReactNode; title: ReactNode; badges?: ReactNode; subtitle?: ReactNode; trailing?: ReactNode; onClick?: () => void; muted?: boolean; children?: ReactNode }) {
   const body = (
     <>
       {icon}
       <div className="min-w-0 flex-1">
-        <div className={cx('flex flex-wrap items-center gap-1.5 font-medium leading-tight', muted && 'line-through')}>{title}</div>
+        <div className={cx('flex flex-wrap items-center gap-1.5 font-medium leading-tight', muted && 'line-through')}><span className="line-clamp-2 break-words">{title}</span>{badges}</div>
         {subtitle && <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{subtitle}</div>}
       </div>
-      {trailing}
+      {trailing && <div className="flex shrink-0 items-center gap-1">{trailing}</div>}
     </>
   )
   return (
@@ -166,5 +166,5 @@ export function Row({ icon, title, subtitle, trailing, onClick, muted, children 
 }
 
 export const Money = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <span className={cx('font-display tnum font-semibold', className)}>{children}</span>
+  <span className={cx('font-display tnum whitespace-nowrap font-semibold', className)}>{children}</span>
 )
