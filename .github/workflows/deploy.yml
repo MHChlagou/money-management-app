@@ -20,6 +20,9 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
+      # Creates the Pages site on first run so no manual setup is needed in the repo settings.
+      - uses: actions/configure-pages@v5
+        with: { enablement: true }
       # Pages serves the site under /<repo-name>/, so the app must be built with that base path.
       - run: BASE_PATH="/${{ github.event.repository.name }}/" npm run build
       - uses: actions/upload-pages-artifact@v3
