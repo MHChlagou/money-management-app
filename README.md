@@ -50,6 +50,11 @@ After installing, the app works fully offline and updates itself when you redepl
 
 New versions show an "Update" prompt inside the app once deployed.
 
+## Releases
+
+Tagged versions live on GitHub (`git tag`). The current release is **v1.0.0**. Every push to `main`
+redeploys the site, and the installed app offers an "Update" button when a new version is ready.
+
 ## How it works
 
 - `src/lib/types.ts`: data model. Recurring items are templates with a start month and an
