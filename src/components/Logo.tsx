@@ -8,7 +8,7 @@ const RIDGES = Array.from({ length: 48 }, (_, i) => {
 
 /**
  * App mark: a coin minted in lume green with a milled edge and an engraved R, on a midnight tile.
- * Same drawing as public/favicon.svg and scripts/make-icons.mjs.
+ * Same drawing as public/favicon-v2.svg and scripts/make-icons.mjs.
  */
 export function Logo({ className }: { className?: string }) {
   const shine = `coin-${useId().replace(/:/g, '')}`

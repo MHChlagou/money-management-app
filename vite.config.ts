@@ -13,7 +13,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['apple-touch-icon.png', 'favicon.svg'],
+      // Bump the -vN in icon file names whenever the artwork changes: installed apps and browser caches
+      // key on the file name, so a new name is what makes them fetch the new picture.
+      includeAssets: ['apple-touch-icon-v2.png', 'favicon-v2.svg'],
       manifest: {
         name: 'Reserve',
         short_name: 'Reserve',
@@ -25,9 +27,9 @@ export default defineConfig({
         start_url: base,
         scope: base,
         icons: [
-          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'icon-v2-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-v2-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icon-v2-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
