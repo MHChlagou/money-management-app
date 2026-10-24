@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { useT } from '../lib/i18n'
 
@@ -45,7 +45,7 @@ export function Button({ variant = 'primary', className, ...props }: ButtonHTMLA
 }
 
 export function IconButton({ label, className, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { label: string }) {
-  return <button {...props} aria-label={label} title={label} className={cx('inline-flex size-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-900/5 dark:text-slate-400 dark:hover:bg-white/10', className)} />
+  return <button {...props} aria-label={label} title={label} className={cx('relative inline-flex size-9 items-center justify-center after:absolute after:-inset-1 after:content-[""] rounded-full text-slate-500 hover:bg-slate-900/5 dark:text-slate-400 dark:hover:bg-white/10', className)} />
 }
 
 const fieldBase = 'w-full min-w-0 min-h-11 rounded-xl border border-line bg-white px-3 text-base text-slate-900 outline-none placeholder:text-slate-400 focus:border-ink-500 focus:ring-2 focus:ring-ink-500/20 disabled:opacity-50 dark:border-line-dark dark:bg-paper-dark dark:text-slate-100'
@@ -73,21 +73,62 @@ export function AmountInput({ value, onChange, className, ...props }: Omit<Input
   return <Input {...props} inputMode="decimal" value={value} onChange={(e) => onChange(e.target.value)} placeholder="0.00" className={cx('font-display tnum', className)} />
 }
 
-/** Bottom sheet on phones, centred dialog on larger screens. */
+/** Sheets can stack (a confirm over a form), so the body scroll lock is released only when the last one closes. */
+let openSheets = 0
+
+const FOCUSABLE ='a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/** Bottom sheet on phones, centred dialog on larger screens. Keeps focus inside while open and hands it back on close. */
 export function Modal({ open, title, onClose, children }: { open: boolean; title: string; onClose: () => void; children: ReactNode }) {
+  const panel = useRef<HTMLDivElement>(null)
+  // Callers pass a new onClose every render; a ref keeps the effect below from re-running (and re-focusing) on each one.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose })
+  // Captured during render, before an autoFocus child moves focus away from the element that opened the sheet.
+  const [wasOpen, setWasOpen] = useState(open)
+  const [opener, setOpener] = useState<HTMLElement | null>(null)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) setOpener(document.activeElement instanceof HTMLElement ? document.activeElement : null)
+  }
+
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    if (!panel.current?.contains(document.activeElement)) panel.current?.focus()
+    const onKey = (e: KeyboardEvent) => {
+      const root = panel.current
+      // Only the sheet holding focus reacts, so Escape closes the top sheet when two are stacked.
+      if (!root || !root.contains(document.activeElement)) return
+      if (e.key === 'Escape') { onCloseRef.current(); return }
+      if (e.key !== 'Tab') return
+      const items = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)]
+      const first = items[0], last = items[items.length - 1]
+      if (!first || !last) { e.preventDefault(); return }
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === root)) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+    }
     window.addEventListener('keydown', onKey)
+    openSheets += 1
     document.body.style.overflow = 'hidden'
-    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
-  }, [open, onClose])
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      openSheets -= 1
+      if (openSheets === 0) document.body.style.overflow = ''
+    }
+  }, [open])
+  // Separate from the effect above so StrictMode's dev re-run does not pull focus out of an autoFocus field.
+  useEffect(() => { if (!open) opener?.focus() }, [open, opener])
   const t = useT()
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-950/50 p-0 backdrop-blur-[2px] sm:items-center sm:p-4" onClick={onClose} role="dialog" aria-modal="true" aria-label={title}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-950/50 p-0 backdrop-blur-[2px] sm:items-center sm:p-4" onClick={onClose} role="presentation">
       <div
-        className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-card px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl sm:max-w-md sm:rounded-3xl sm:pt-5 dark:bg-card-dark"
+        ref={panel}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
+        className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-card px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl outline-none sm:max-w-md sm:rounded-3xl sm:pt-5 dark:bg-card-dark"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden dark:bg-slate-600" aria-hidden />
@@ -137,7 +178,7 @@ export function Segmented<T extends string>({ value, options, onChange }: { valu
     <div className="inline-flex rounded-full bg-slate-900/5 p-1 dark:bg-white/10" role="radiogroup">
       {options.map((o) => (
         <button key={o.value} type="button" role="radio" aria-checked={value === o.value} onClick={() => onChange(o.value)}
-          className={cx('rounded-full px-3 py-1 text-sm font-medium transition', value === o.value ? 'bg-white text-ink-900 shadow-sm dark:bg-ink-500 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200')}>
+          className={cx('relative rounded-full px-3 py-1 text-sm font-medium transition after:absolute after:inset-x-0 after:-inset-y-2 after:content-[""]', value === o.value ? 'bg-white text-ink-900 shadow-sm dark:bg-ink-500 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200')}>
           {o.label}
         </button>
       ))}

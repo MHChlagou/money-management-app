@@ -96,7 +96,7 @@ export function RecurringPage() {
                         <Money>{fit(r.amount)}</Money>
                         {r.intervalMonths > 1 && <div className="whitespace-nowrap text-[11px] text-slate-500 dark:text-slate-400">{t('common.perMonth', { amount: money(monthlyEquivalent(r), true) })}</div>}
                       </div>
-                      <button onClick={() => toggle(r)} className="inline-flex size-9 items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-900/5 max-[359px]:hidden dark:hover:bg-white/10" aria-label={r.active ? t('rec.pauseA', { name: r.name }) : t('rec.resumeA', { name: r.name })} title={r.active ? t('rec.pause') : t('rec.resume')}>
+                      <button onClick={() => toggle(r)} className="relative inline-flex size-9 items-center justify-center after:absolute after:-inset-1 after:content-[''] rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-900/5 max-[359px]:hidden dark:hover:bg-white/10" aria-label={r.active ? t('rec.pauseA', { name: r.name }) : t('rec.resumeA', { name: r.name })} title={r.active ? t('rec.pause') : t('rec.resume')}>
                         {r.active ? <Pause size={16} /> : <Play size={16} />}
                       </button>
                     </div>

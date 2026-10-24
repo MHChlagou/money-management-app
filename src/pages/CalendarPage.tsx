@@ -65,7 +65,7 @@ export function CalendarPage({ monthKey, onMonthChange }: { monthKey: string; on
             return (
               <button key={d} onClick={() => setSelected(d)} aria-label={`${t('cal.dayLabel', { d })}${total ? `, ${money(total)}` : ''}`}
                 className={cx('relative flex aspect-square flex-col items-center justify-start rounded-xl p-0.5 text-xs transition hover:ring-2 hover:ring-ink-500', isToday && 'ring-2 ring-ink-600 dark:ring-mint-400', past && !total && 'opacity-40')}
-                style={total > 0 ? { background: `rgba(75,72,201,${intensity})` } : undefined}>
+                style={total > 0 ? { background: `color-mix(in srgb, var(--color-ink-600) ${Math.round(intensity * 100)}%, transparent)` } : undefined}>
                 <span className="font-display font-semibold">{d}</span>
                 {total > 0 && <span className="tnum mt-auto w-full truncate text-[10px] leading-tight text-slate-900 dark:text-white">{money(total)}</span>}
                 {entries.length > 1 && <span className="absolute right-1 top-1 size-1.5 rounded-full bg-coral-400" aria-hidden />}

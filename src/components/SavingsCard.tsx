@@ -8,6 +8,7 @@ import { formatMoney, parseAmount } from '../lib/format'
 import { daysInMonth, formatDay, pad2, todayIso } from '../lib/months'
 import { newId } from '../lib/id'
 import { showToast } from '../lib/toast'
+import { askConfirm } from '../lib/confirm'
 import { useT } from '../lib/i18n'
 
 const POT_ICONS = ['🛟', '🏖️', '🏠', '🚗', '💻', '🎓', '💍', '👶', '🎁', '✈️', '🐷', '🎯']
@@ -30,8 +31,8 @@ export function SavingsCard({ monthKey }: { monthKey: string }) {
     setState((s) => ({ ...s, pots: s.pots.some((p) => p.id === pot.id) ? s.pots.map((p) => (p.id === pot.id ? pot : p)) : [...s.pots, pot] }))
     setPotForm(null)
   }
-  const deletePot = (pot: SavingsPot) => {
-    if (pot.contributions.length && !confirm(t('savings.deleteConfirm', { name: pot.name, n: pot.contributions.length }))) return
+  const deletePot = async (pot: SavingsPot) => {
+    if (pot.contributions.length && !(await askConfirm(t('savings.deleteConfirm', { name: pot.name, n: pot.contributions.length }), { confirmLabel: t('common.delete'), danger: true }))) return
     setState((s) => ({ ...s, pots: s.pots.filter((p) => p.id !== pot.id) }))
     setPotForm(null); setDetail(null)
     showToast(t('toast.deleted', { name: pot.name }), () => setState((s) => ({ ...s, pots: [...s.pots, pot] })))
@@ -93,7 +94,7 @@ export function SavingsCard({ monthKey }: { monthKey: string }) {
       )}
 
       <Modal open={potForm !== null} title={potForm === 'new' ? t('savings.newPot') : t('savings.editPot')} onClose={() => setPotForm(null)}>
-        {potForm && <PotForm initial={potForm === 'new' ? undefined : potForm} onSave={savePot} onDelete={potForm !== 'new' ? () => deletePot(potForm) : undefined} onCancel={() => setPotForm(null)} />}
+        {potForm && <PotForm initial={potForm === 'new' ? undefined : potForm} onSave={savePot} onDelete={potForm !== 'new' ? () => void deletePot(potForm) : undefined} onCancel={() => setPotForm(null)} />}
       </Modal>
 
       <Modal open={contrib !== null} title={contrib?.withdraw ? t('savings.takeMoneyOut') : t('savings.setMoneyAside')} onClose={() => setContrib(null)}>

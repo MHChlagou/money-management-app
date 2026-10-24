@@ -11,6 +11,7 @@ import { applyTheme, watchSystemTheme } from './lib/theme'
 import { useSwipe } from './lib/useSwipe'
 import { InstallBanner } from './components/InstallBanner'
 import { ToastHost } from './components/Toast'
+import { ConfirmHost } from './components/ConfirmSheet'
 import { cx } from './components/ui'
 import { WelcomeSheet } from './components/WelcomeSheet'
 import { useT, type Key } from './lib/i18n'
@@ -68,6 +69,7 @@ export default function App() {
 
       <ToastHost />
       <WelcomeSheet />
+      <ConfirmHost />
 
       <nav className="fixed inset-x-0 bottom-0 z-10 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden" aria-label="Main">
         <div className="mx-auto flex max-w-md items-center rounded-full border border-line bg-card/95 p-1.5 shadow-xl shadow-ink-950/10 backdrop-blur dark:border-line-dark dark:bg-card-dark/95">

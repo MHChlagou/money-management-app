@@ -15,7 +15,7 @@ export function MonthNav({ value, onChange, tone = 'light' }: { value: string; o
   const ref = useRef<HTMLDivElement>(null)
   const today = currentMonthKey()
   const onDark = tone === 'onDark'
-  const btn = cx('inline-flex size-9 items-center justify-center rounded-full', onDark ? 'text-white/80 hover:bg-white/15' : 'text-slate-500 hover:bg-slate-900/5 dark:text-slate-400 dark:hover:bg-white/10')
+  const btn = cx('relative inline-flex size-9 items-center justify-center after:absolute after:-inset-1 after:content-[""] rounded-full', onDark ? 'text-white/80 hover:bg-white/15' : 'text-slate-500 hover:bg-slate-900/5 dark:text-slate-400 dark:hover:bg-white/10')
 
   useEffect(() => {
     if (!open) return
@@ -37,9 +37,9 @@ export function MonthNav({ value, onChange, tone = 'light' }: { value: string; o
       {open && (
         <div className="absolute left-1/2 top-full z-30 mt-1 w-72 -translate-x-1/2 rounded-2xl border border-line bg-card p-3 text-slate-900 shadow-xl dark:border-line-dark dark:bg-card-dark dark:text-slate-100" role="dialog" aria-label={t('nav.pickMonth')}>
           <div className="mb-2 flex items-center justify-between">
-            <button className="inline-flex size-9 items-center justify-center rounded-full hover:bg-slate-900/5 dark:hover:bg-white/10" aria-label={t('nav.prevYear')} onClick={() => setYear((y) => y - 1)}><ChevronLeft size={18} /></button>
+            <button className="relative inline-flex size-9 items-center justify-center after:absolute after:-inset-1 after:content-[''] rounded-full hover:bg-slate-900/5 dark:hover:bg-white/10" aria-label={t('nav.prevYear')} onClick={() => setYear((y) => y - 1)}><ChevronLeft size={18} /></button>
             <span className="font-display font-semibold">{year}</span>
-            <button className="inline-flex size-9 items-center justify-center rounded-full hover:bg-slate-900/5 dark:hover:bg-white/10" aria-label={t('nav.nextYear')} onClick={() => setYear((y) => y + 1)}><ChevronRight size={18} /></button>
+            <button className="relative inline-flex size-9 items-center justify-center after:absolute after:-inset-1 after:content-[''] rounded-full hover:bg-slate-900/5 dark:hover:bg-white/10" aria-label={t('nav.nextYear')} onClick={() => setYear((y) => y + 1)}><ChevronRight size={18} /></button>
           </div>
           <div className="grid grid-cols-4 gap-1">
             {Array.from({ length: 12 }, (_, i) => {

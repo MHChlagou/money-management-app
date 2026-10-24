@@ -97,21 +97,6 @@ export interface AppState {
   pots: SavingsPot[]
 }
 
-export const KIND_LABELS: Record<RecurringKind, string> = {
-  subscription: 'Subscription',
-  credit: 'Credit / loan',
-  bill: 'Bill',
-  other: 'Other',
-}
-
-export const INTERVAL_LABELS: Record<number, string> = {
-  1: 'Monthly',
-  2: 'Every 2 months',
-  3: 'Quarterly',
-  6: 'Every 6 months',
-  12: 'Yearly',
-}
-
 /**
  * Colours available for categories. The first eight are the validated categorical palette
  * (colour-blind safe in adjacent pairs); the rest are extra choices for the user's own categories.

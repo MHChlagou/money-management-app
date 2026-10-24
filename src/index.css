@@ -47,8 +47,17 @@ html {
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
   color-scheme: light;
+  /* Chart series: validated categorical slots 1 to 3. Charts reference these vars so a theme change repaints them. */
+  --chart-income: #2a78d6;
+  --chart-expenses: #eb6834;
+  --chart-kept: #1baf7a;
 }
-html[data-theme="dark"] { color-scheme: dark; }
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --chart-income: #3987e5;
+  --chart-expenses: #d95926;
+  --chart-kept: #199e70;
+}
 
 body {
   @apply bg-paper text-slate-900 antialiased dark:bg-paper-dark dark:text-slate-100;
