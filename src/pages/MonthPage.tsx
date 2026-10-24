@@ -130,9 +130,12 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
                   title={l.name} badges={<>{l.isLastMonth && <Pill tone="good">{t('pill.lastOne')}</Pill>}{l.amount !== l.defaultAmount && <Pill tone="warn">{t('pill.edited')}</Pill>}{l.intervalMonths > 1 && <Pill tone="brand">{intervalLabel(l.intervalMonths)}</Pill>}</>}
                   subtitle={`${kindLabel(l.kind)}, ${c.name}${l.dayOfMonth ? `, ${t('recurring.day', { n: l.dayOfMonth })}` : ''}`}
                   trailing={<Money>{fit(l.amount)}</Money>}>
-                  <input type="checkbox" checked={!l.skipped}
-                    onChange={(e) => updateMonth(monthKey, (m) => ({ ...m, overrides: { ...m.overrides, [l.id]: { ...m.overrides[l.id], skipped: !e.target.checked } } }))}
-                    className="size-5 shrink-0 accent-ink-600" aria-label={t('recurring.include', { name: l.name })} />
+                  {/* The padded label gives a 44px tap area; negative margins keep the 20px box in the layout. */}
+                  <label className="-m-3 flex shrink-0 p-3">
+                    <input type="checkbox" checked={!l.skipped}
+                      onChange={(e) => updateMonth(monthKey, (m) => ({ ...m, overrides: { ...m.overrides, [l.id]: { ...m.overrides[l.id], skipped: !e.target.checked } } }))}
+                      className="size-5 accent-ink-600" aria-label={t('recurring.include', { name: l.name })} />
+                  </label>
                 </Row>
               )
             })}

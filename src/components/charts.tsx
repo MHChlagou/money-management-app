@@ -4,18 +4,15 @@ import { formatMoney } from '../lib/format'
 import { formatMonth, monthName, splitKey } from '../lib/months'
 import { t } from '../lib/i18n'
 
-/* Series colours: validated categorical slots 1 & 2. Text and grid use CSS currentColor so dark mode just works. */
-const INCOME = { light: '#2a78d6', dark: '#3987e5' }
-const EXPENSES = { light: '#eb6834', dark: '#d95926' }
-const KEPT = { light: '#1baf7a', dark: '#199e70' }
-
-const isDark = () => document.documentElement.dataset.theme === 'dark'
-const pick = (c: { light: string; dark: string }) => (isDark() ? c.dark : c.light)
+/* Series colours are CSS vars defined per theme in index.css. Text and grid use currentColor, so dark mode just works. */
+const INCOME = 'var(--chart-income)'
+const EXPENSES = 'var(--chart-expenses)'
+const KEPT = 'var(--chart-kept)'
 
 function TooltipBox({ active, payload, label, currency }: { active?: boolean; payload?: { name: string; value: number; color?: string }[]; label?: string; currency: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-lg bg-white px-3 py-2 text-xs shadow-lg ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+    <div className="rounded-lg bg-card px-3 py-2 text-xs shadow-lg ring-1 ring-line dark:bg-card-dark dark:ring-line-dark">
       <div className="mb-1 font-semibold">{label}</div>
       {payload.map((p) => (
         <div key={p.name} className="flex items-center gap-2">
@@ -45,10 +42,10 @@ export function TrendChart({ points, currency, highlight }: { points: TrendPoint
           <YAxis tick={axisStyle} tickLine={false} axisLine={false} width={36} tickFormatter={shortNum} />
           <Tooltip content={<TooltipBox currency={currency} />} cursor={{ fill: 'currentColor', fillOpacity: 0.06 }} />
           <Legend iconType="square" iconSize={10} wrapperStyle={{ fontSize: 12 }} />
-          <Bar dataKey={kIncome} fill={pick(INCOME)} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+          <Bar dataKey={kIncome} fill={INCOME} radius={[4, 4, 0, 0]} isAnimationActive={false}>
             {data.map((d) => <Cell key={d.key} fillOpacity={d.key === highlight ? 1 : 0.6} />)}
           </Bar>
-          <Bar dataKey={kExpenses} fill={pick(EXPENSES)} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+          <Bar dataKey={kExpenses} fill={EXPENSES} radius={[4, 4, 0, 0]} isAnimationActive={false}>
             {data.map((d) => <Cell key={d.key} fillOpacity={d.key === highlight ? 1 : 0.6} />)}
           </Bar>
         </BarChart>
@@ -70,7 +67,7 @@ export function YearChart({ points, currency, highlight }: { points: TrendPoint[
           <YAxis tick={axisStyle} tickLine={false} axisLine={false} width={36} tickFormatter={shortNum} />
           <Tooltip content={<TooltipBox currency={currency} />} cursor={{ fill: 'currentColor', fillOpacity: 0.06 }} />
           <Bar dataKey={kKept} radius={[4, 4, 0, 0]} isAnimationActive={false}>
-            {data.map((d) => <Cell key={d.key} fill={(d[kKept] as number) < 0 ? pick(EXPENSES) : pick(KEPT)} fillOpacity={d.key === highlight ? 1 : 0.65} />)}
+            {data.map((d) => <Cell key={d.key} fill={(d[kKept] as number) < 0 ? EXPENSES : KEPT} fillOpacity={d.key === highlight ? 1 : 0.65} />)}
           </Bar>
         </BarChart>
       </ResponsiveContainer>

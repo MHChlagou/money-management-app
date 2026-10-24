@@ -13,7 +13,7 @@ export function ToastHost() {
         {toast.action && (
           <button onClick={() => { toast.action?.run(); dismissToast() }} className="rounded-full bg-mint-400 px-3 py-1 text-xs font-semibold text-ink-950">{toast.action.label}</button>
         )}
-        <button onClick={dismissToast} aria-label={t('common.dismiss')} className="rounded-full p-1 opacity-60 hover:opacity-100"><X size={14} /></button>
+        <button onClick={dismissToast} aria-label={t('common.dismiss')} className="relative rounded-full p-1 opacity-60 after:absolute after:-inset-[11px] after:content-[''] hover:opacity-100"><X size={14} /></button>
       </div>
     </div>
   )

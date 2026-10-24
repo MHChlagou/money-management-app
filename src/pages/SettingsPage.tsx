@@ -7,11 +7,22 @@ import { CATEGORY_COLORS, emptyState, type Category, type Language, type Theme }
 import { formatMoneyFit, parseAmount } from '../lib/format'
 import { sampleState } from '../lib/sample'
 import { showToast } from '../lib/toast'
+import { askConfirm } from '../lib/confirm'
 import { newId } from '../lib/id'
 import { categoryName, useT } from '../lib/i18n'
 import { CURRENCIES } from '../components/WelcomeSheet'
 
 const ICONS = ['🏠', '💡', '🛒', '🚗', '🛡️', '🏦', '🎬', '❤️', '🍽️', '🛍️', '✈️', '📦', '📱', '🎓', '👶', '🐶', '💇', '🎁', '☕', '🎮', '📚', '💪', '🧾', '🏷️']
+
+/**
+ * Turns what was typed in the savings goal field into the percentage to store. Runs on blur and Enter.
+ * Empty or unreadable input keeps the current goal; anything else is rounded to a whole percent and clamped to 0-100.
+ */
+const parseGoalPct = (raw: string, current: number): number => {
+  const value = Number.parseFloat(raw)
+  if (!Number.isFinite(value)) return current
+  return Math.min(100, Math.max(0, Math.round(value)))
+}
 
 export function SettingsPage() {
   const state = useAppState()
@@ -21,6 +32,12 @@ export function SettingsPage() {
   const [editingCat, setEditingCat] = useState<Category | 'new' | null>(null)
   const [salaryDraft, setSalaryDraft] = useState(state.defaultSalary ? String(state.defaultSalary) : '')
   const [nameDraft, setNameDraft] = useState(state.userName ?? '')
+  const [goalDraft, setGoalDraft] = useState(String(state.savingsGoalPct))
+  const commitGoal = () => {
+    const pct = parseGoalPct(goalDraft, state.savingsGoalPct)
+    setState((s) => ({ ...s, savingsGoalPct: pct }))
+    setGoalDraft(String(pct))
+  }
 
   const download = (content: string, type: string, ext: string) => {
     const url = URL.createObjectURL(new Blob([content], { type }))
@@ -38,7 +55,7 @@ export function SettingsPage() {
     try {
       const parsed = JSON.parse(await file.text())
       if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.recurring) || typeof parsed.months !== 'object') throw new Error(t('set.notBackup'))
-      if (!confirm(t('set.replaceConfirm'))) return
+      if (!(await askConfirm(t('set.replaceConfirm'), { confirmLabel: t('confirm.replace'), danger: true }))) return
       replaceState({ ...migrate(parsed), onboarded: true })
       setMsg(t('set.restored'))
     } catch (e) {
@@ -46,8 +63,8 @@ export function SettingsPage() {
     }
   }
 
-  const reset = () => {
-    if (!confirm(t('set.deleteConfirm'))) return
+  const reset = async () => {
+    if (!(await askConfirm(t('set.deleteConfirm'), { confirmLabel: t('set.deleteAll'), danger: true }))) return
     replaceState({ ...emptyState(), language: state.language, onboarded: true })
     setMsg(t('set.cleared'))
   }
@@ -59,9 +76,13 @@ export function SettingsPage() {
     setState((s) => ({ ...s, categories: s.categories.some((x) => x.id === c.id) ? s.categories.map((x) => (x.id === c.id ? c : x)) : [...s.categories, c] }))
     setEditingCat(null)
   }
-  const deleteCategory = (c: Category) => {
+  const deleteCategory = async (c: Category) => {
     const n = usage(c.id)
-    if (n > 0 && !confirm(t('cat.deleteConfirm', { n, name: categoryName(c.id, c.name) }))) return
+    if (n > 0 && !(await askConfirm(t('cat.deleteConfirm', { n, name: categoryName(c.id, c.name) }), { confirmLabel: t('common.delete'), danger: true }))) return
+    const before = getState()
+    const index = before.categories.findIndex((x) => x.id === c.id)
+    const movedRecurring = new Set(before.recurring.filter((r) => r.categoryId === c.id).map((r) => r.id))
+    const movedOneOffs = new Set(Object.values(before.months).flatMap((m) => m.oneOffs.filter((e) => e.categoryId === c.id).map((e) => e.id)))
     setState((s) => ({
       ...s,
       categories: s.categories.filter((x) => x.id !== c.id),
@@ -69,6 +90,18 @@ export function SettingsPage() {
       months: Object.fromEntries(Object.entries(s.months).map(([k, m]) => [k, { ...m, oneOffs: m.oneOffs.map((e) => (e.categoryId === c.id ? { ...e, categoryId: 'other' } : e)) }])),
     }))
     setEditingCat(null)
+    // Undo puts the category back in place and moves back only the lines that are still in "Other".
+    showToast(t('toast.deleted', { name: categoryName(c.id, c.name) }), () => setState((s) => ({
+      ...s,
+      categories: [...s.categories.slice(0, index), c, ...s.categories.slice(index)],
+      recurring: s.recurring.map((r) => (movedRecurring.has(r.id) && r.categoryId === 'other' ? { ...r, categoryId: c.id } : r)),
+      months: Object.fromEntries(Object.entries(s.months).map(([k, m]) => [k, { ...m, oneOffs: m.oneOffs.map((e) => (movedOneOffs.has(e.id) && e.categoryId === 'other' ? { ...e, categoryId: c.id } : e)) }])),
+    })))
+  }
+  const loadExample = async () => {
+    if (!(await askConfirm(t('set.exampleConfirm'), { confirmLabel: t('confirm.replace'), danger: true }))) return
+    replaceState({ ...sampleState(), language: state.language, userName: state.userName, onboarded: true })
+    showToast(t('toast.exampleLoaded'))
   }
 
   const isIos = /iP(hone|ad|od)/.test(navigator.userAgent)
@@ -97,7 +130,7 @@ export function SettingsPage() {
             </Select>
           </Field>
           <Field label={t('set.goal')}>
-            <Input type="number" min={0} max={100} inputMode="numeric" value={state.savingsGoalPct} onChange={(e) => setState((s) => ({ ...s, savingsGoalPct: Math.max(0, Math.min(100, Number(e.target.value) || 0)) }))} />
+            <Input type="number" min={0} max={100} inputMode="numeric" value={goalDraft} onChange={(e) => setGoalDraft(e.target.value)} onBlur={commitGoal} onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }} />
           </Field>
           <Field label={t('set.defaultSalary')} hint={t('set.defaultSalaryHint')}>
             <AmountInput value={salaryDraft} onChange={setSalaryDraft} onBlur={() => setState((s) => ({ ...s, defaultSalary: parseAmount(salaryDraft) }))} />
@@ -153,8 +186,8 @@ export function SettingsPage() {
       <Card>
         <SectionTitle>{t('set.exampleReset')}</SectionTitle>
         <div className="flex flex-wrap gap-2">
-          <Button className="w-full sm:w-auto" variant="secondary" onClick={() => { if (confirm(t('set.exampleConfirm'))) { replaceState({ ...sampleState(), language: state.language, userName: state.userName, onboarded: true }); showToast(t('toast.exampleLoaded')) } }}>{t('set.loadExample')}</Button>
-          <Button className="w-full sm:w-auto" variant="danger" onClick={reset}><Trash2 size={16} /> {t('set.deleteAll')}</Button>
+          <Button className="w-full sm:w-auto" variant="secondary" onClick={() => void loadExample()}>{t('set.loadExample')}</Button>
+          <Button className="w-full sm:w-auto" variant="danger" onClick={() => void reset()}><Trash2 size={16} /> {t('set.deleteAll')}</Button>
         </div>
       </Card>
 
@@ -165,7 +198,7 @@ export function SettingsPage() {
           <CategoryForm
             initial={editingCat === 'new' ? undefined : editingCat}
             onSave={saveCategory}
-            onDelete={editingCat !== 'new' && editingCat.id !== 'other' ? () => deleteCategory(editingCat) : undefined}
+            onDelete={editingCat !== 'new' && editingCat.id !== 'other' ? () => void deleteCategory(editingCat) : undefined}
             onCancel={() => setEditingCat(null)}
           />
         )}

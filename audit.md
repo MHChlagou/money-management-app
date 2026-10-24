@@ -162,21 +162,29 @@ identifying a category, and the colour barely shows in dark mode.
 4. The desktop header is `sticky` but has no background, so content scrolls visibly underneath it at 640px and
    wider (`src/App.tsx:47`). Fixed: translucent paper background with blur.
 5. The savings goal field clamps on every keystroke. Clearing it gives 0 straight away, so a value cannot be
-   freely retyped (`src/pages/SettingsPage.tsx:100`). Open.
+   freely retyped (`src/pages/SettingsPage.tsx:100`). Fixed: the field keeps a draft and commits on blur or
+   Enter. Empty input keeps the current goal; other values are rounded to a whole percent and clamped to 0-100.
 
 ### UX and accessibility
 
 6. Tap targets are small: the skip checkbox is 20px and icon buttons are 36px, below the 44px minimum. Bottom
-   nav labels are 10px.
+   nav labels are 10px. Fixed: icon buttons, month arrows, pause, toast and banner dismiss buttons, and
+   `Segmented` options get a 44px hit area through an invisible `::after` layer; the checkbox gets a padded
+   label. The visible layout is unchanged. Nav labels stay at 10px, since 11px risks clipping French labels at 320px.
 7. Destructive actions (delete pot, delete category, import, reset) use the browser's `confirm()` instead of
-   the app's own sheet. Deleting a category has no undo, unlike every other delete.
+   the app's own sheet. Deleting a category has no undo, unlike every other delete. Fixed: `askConfirm()`
+   (`src/lib/confirm.ts`) opens an in-app sheet with Cancel focused; deleting a category offers Undo.
 8. The modal does not trap focus or return focus when closed, and `role="dialog"` sits on the backdrop rather
-   than the panel.
+   than the panel. Fixed: focus moves into the sheet, Tab cycles inside it, focus returns to the opener on
+   close, and Escape closes only the top sheet when two are stacked. The scroll lock is released only when
+   the last sheet closes.
 9. Chart colours are picked during render from `data-theme`, so if the OS theme changes while Insights is open,
-   the charts keep the old palette until the next re-render.
+   the charts keep the old palette until the next re-render. Fixed: series colours are CSS variables
+   (`--chart-income`, `--chart-expenses`, `--chart-kept`) that switch with `data-theme`.
 10. Colours are hardcoded outside the tokens (calendar rgba, chart hexes, amber, tooltip `slate-800`), so a
-    palette change means editing several files.
-11. `KIND_LABELS` and `INTERVAL_LABELS` in `src/lib/types.ts` are no longer used; i18n replaced them.
+    palette change means editing several files. Fixed for charts (CSS variables), the calendar (`color-mix()`
+    with `--color-ink-600`) and the tooltip (card and line tokens). Amber stays Tailwind's default palette.
+11. `KIND_LABELS` and `INTERVAL_LABELS` in `src/lib/types.ts` are no longer used; i18n replaced them. Fixed: removed.
 
 ### Already working well
 
@@ -187,5 +195,6 @@ to do next.
 ## 6. Suggested order
 
 1. Bugs 1 to 4 and the contrast fixes. Done; not yet checked in a browser, since no screenshots could be taken.
-2. Bug 5, tap target sizes and the modal focus handling.
-3. Moving the hardcoded colours into tokens, then the `confirm()` replacements.
+2. Bug 5 and items 6 to 11. Done; also not yet checked in a browser.
+3. Still open: input placeholder contrast, and the 32px ghost buttons in section titles (they pass WCAG AA
+   at 24px, but not the 44px guideline).
