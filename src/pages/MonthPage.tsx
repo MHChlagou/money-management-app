@@ -47,7 +47,7 @@ export function MonthPage({ monthKey, onMonthChange, goTo }: { monthKey: string;
         <MonthNav value={monthKey} onChange={onMonthChange} tone="onDark" />
         <div className="mt-4 px-1">
           {state.userName && <div className="mb-1 text-sm font-medium text-white/90">{greeting(state.userName)}</div>}
-          <div className="text-sm text-white/70">{sum.remaining < 0 ? t('hero.over') : t('hero.left')}</div>
+          <div className="text-sm text-white/70">{sum.kept < 0 ? t('hero.over') : sum.remaining < 0 ? t('hero.overAside') : t('hero.left')}</div>
           <div className={cx('font-display font-bold leading-none tracking-tight', money(Math.abs(sum.remaining), true).length > 11 ? 'text-[32px]' : 'text-[44px]', sum.remaining < 0 ? 'text-coral-400' : 'text-mint-300')}>
             {money(Math.abs(sum.remaining), true)}
           </div>
@@ -221,7 +221,7 @@ function LineOverrideForm({ line, currency, onSave }: { line: ResolvedLine; curr
   const [amount, setAmount] = useState(String(line.amount))
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSave(parseAmount(amount)) }} className="space-y-4">
-      <p className="text-sm text-slate-500">{t('override.usually', { amount: formatMoney(line.defaultAmount, currency) })}</p>
+      <p className="text-sm text-slate-500 dark:text-slate-400">{t('override.usually', { amount: formatMoney(line.defaultAmount, currency) })}</p>
       <Field label={t('override.amount')}><AmountInput value={amount} onChange={setAmount} autoFocus /></Field>
       <div className="flex justify-end gap-2">
         {line.amount !== line.defaultAmount && <Button type="button" variant="secondary" onClick={() => onSave(null)}>{t('override.reset')}</Button>}

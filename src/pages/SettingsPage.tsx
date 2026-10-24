@@ -4,7 +4,7 @@ import { AmountInput, Button, Card, CategoryDot, cx, Field, IconButton, Input, M
 import { getState, migrate, replaceState, setState, useAppState } from '../lib/store'
 import { allTransactions } from '../lib/calc'
 import { CATEGORY_COLORS, emptyState, type Category, type Language, type Theme } from '../lib/types'
-import { parseAmount } from '../lib/format'
+import { formatMoneyFit, parseAmount } from '../lib/format'
 import { sampleState } from '../lib/sample'
 import { showToast } from '../lib/toast'
 import { newId } from '../lib/id'
@@ -119,8 +119,8 @@ export function SettingsPage() {
               <button className="flex w-full items-center gap-3 py-2 text-left" onClick={() => setEditingCat(c)}>
                 <CategoryDot icon={c.icon} color={c.color} size="sm" />
                 <span className="min-w-0 flex-1 truncate font-medium">{categoryName(c.id, c.name)}</span>
-                <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">{c.budget ? t('set.budget', { amount: c.budget }) : t('set.noBudget')}</span>
-                <ChevronRight size={16} className="shrink-0 text-slate-400" />
+                <span className="shrink-0 whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">{c.budget ? t('set.budget', { amount: formatMoneyFit(c.budget, state.currency) }) : t('set.noBudget')}</span>
+                <ChevronRight size={16} className="shrink-0 text-slate-500 dark:text-slate-400" />
               </button>
             </li>
           ))}
@@ -158,7 +158,7 @@ export function SettingsPage() {
         </div>
       </Card>
 
-      <p className="text-center text-xs text-slate-400">{t('set.footer')}</p>
+      <p className="text-center text-xs text-slate-600 dark:text-slate-400">{t('set.footer')}</p>
 
       <Modal open={editingCat !== null} title={editingCat === 'new' ? t('cat.new') : t('cat.edit')} onClose={() => setEditingCat(null)}>
         {editingCat && (

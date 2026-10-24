@@ -80,11 +80,13 @@ export function YearChart({ points, currency, highlight }: { points: TrendPoint[
 
 /** Donut of spending by category. Beyond six slices the rest folds into "Other" so colours stay distinguishable. */
 export function CategoryDonut({ totals, currency }: { totals: CategoryTotal[]; currency: string }) {
-  const top = totals.slice(0, 6)
-  const rest = totals.slice(6)
+  // When slices fold, the real "Other" category folds with them so the legend never shows "Other" twice.
+  const named = totals.length > 6 ? totals.filter((t) => t.category.id !== 'other') : totals
+  const top = named.slice(0, 6)
+  const rest = totals.filter((t) => !top.includes(t))
   const data = [
-    ...top.map((t) => ({ name: `${t.category.icon} ${t.category.name}`, value: t.amount, color: t.category.color })),
-    ...(rest.length ? [{ name: `📦 ${t('ins.other')}`, value: rest.reduce((a, t) => a + t.amount, 0), color: '#94a3b8' }] : []),
+    ...top.map((t) => ({ id: t.category.id, name: `${t.category.icon} ${t.category.name}`, value: t.amount, color: t.category.color })),
+    ...(rest.length ? [{ id: 'folded-other', name: `📦 ${t('ins.other')}`, value: rest.reduce((a, t) => a + t.amount, 0), color: '#94a3b8' }] : []),
   ]
   const total = data.reduce((a, d) => a + d.value, 0)
   return (
@@ -93,22 +95,22 @@ export function CategoryDonut({ totals, currency }: { totals: CategoryTotal[]; c
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} dataKey="value" nameKey="name" innerRadius={52} outerRadius={80} paddingAngle={2} strokeWidth={0} isAnimationActive={false}>
-              {data.map((d) => <Cell key={d.name} fill={d.color} />)}
+              {data.map((d) => <Cell key={d.id} fill={d.color} />)}
             </Pie>
             <Tooltip content={<TooltipBox currency={currency} />} />
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-[10px] uppercase tracking-wide text-slate-500">{t('ins.total')}</span>
+          <span className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">{t('ins.total')}</span>
           <span className="text-sm font-semibold tabular-nums">{formatMoney(total, currency, { compact: true })}</span>
         </div>
       </div>
       <ul className="min-w-0 flex-1 space-y-1 text-xs">
         {data.map((d) => (
-          <li key={d.name} className="flex items-center gap-2">
+          <li key={d.id} className="flex items-center gap-2">
             <span className="size-2.5 shrink-0 rounded-sm" style={{ background: d.color }} />
             <span className="truncate">{d.name}</span>
-            <span className="ml-auto shrink-0 tabular-nums text-slate-500">{Math.round((d.value / total) * 100)}%</span>
+            <span className="ml-auto shrink-0 tabular-nums text-slate-500 dark:text-slate-400">{Math.round((d.value / total) * 100)}%</span>
           </li>
         ))}
       </ul>

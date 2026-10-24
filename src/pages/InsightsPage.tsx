@@ -15,7 +15,7 @@ const severityStyle: Record<Severity, { Icon: typeof Info; cls: string; icon: st
   serious: { Icon: OctagonAlert, cls: 'border-l-coral-500', icon: 'text-coral-600 dark:text-coral-400' },
   warning: { Icon: AlertTriangle, cls: 'border-l-amber-400', icon: 'text-amber-600 dark:text-amber-400' },
   info: { Icon: Info, cls: 'border-l-ink-500', icon: 'text-ink-600 dark:text-ink-200' },
-  good: { Icon: CheckCircle2, cls: 'border-l-mint-400', icon: 'text-mint-600 dark:text-mint-300' },
+  good: { Icon: CheckCircle2, cls: 'border-l-mint-400', icon: 'text-mint-700 dark:text-mint-300' },
 }
 
 export function InsightsPage({ monthKey, onMonthChange }: { monthKey: string; onMonthChange: (k: string) => void }) {
@@ -74,12 +74,12 @@ export function InsightsPage({ monthKey, onMonthChange }: { monthKey: string; on
                   <div className="flex items-center gap-2 text-sm">
                     <CategoryDot icon={b.category.icon} color={b.category.color} size="sm" />
                     <span className="font-medium">{b.category.name}</span>
-                    <span className={cx('ml-auto', over && 'text-coral-600 dark:text-coral-400')}><Money>{money(b.amount, true)}</Money> <span className="text-slate-500">{t('ins.of')} {money(b.budget!, true)}</span></span>
+                    <span className={cx('ml-auto', over && 'text-coral-600 dark:text-coral-400')}><Money>{money(b.amount, true)}</Money> <span className="text-slate-500 dark:text-slate-400">{t('ins.of')} {money(b.budget!, true)}</span></span>
                   </div>
                   <div className="mt-1.5 h-2 rounded-full bg-slate-900/5 dark:bg-white/10">
                     <div className={cx('h-full rounded-full', over ? 'bg-coral-500' : near ? 'bg-amber-400' : 'bg-mint-400')} style={{ width: `${Math.min(100, b.share * 100)}%` }} />
                   </div>
-                  <div className="mt-0.5 text-[11px] text-slate-500">{over ? t('ins.over', { amount: money(b.amount - b.budget!, true) }) : t('ins.left', { amount: money(b.budget! - b.amount, true) })}</div>
+                  <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{over ? t('ins.over', { amount: money(b.amount - b.budget!, true) }) : t('ins.left', { amount: money(b.budget! - b.amount, true) })}</div>
                 </li>
               )
             })}
@@ -98,14 +98,14 @@ export function InsightsPage({ monthKey, onMonthChange }: { monthKey: string; on
                   <CategoryDot icon={c.category.icon} color={c.category.color} size="sm" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium">{c.category.name}</div>
-                    <div className="flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+                    <div className="flex flex-wrap items-center gap-x-2 text-xs text-slate-500 dark:text-slate-400">
                       <span className="whitespace-nowrap">{t('ins.ofSpending', { pct: formatPct(c.share) })}</span>
                       {c.deltaRatio !== null && Math.abs(c.delta) >= 1 && (
-                        <span className={cx('flex items-center gap-0.5 font-medium', c.delta > 0 ? 'text-coral-600 dark:text-coral-400' : 'text-mint-600 dark:text-mint-300')}>
+                        <span className={cx('flex items-center gap-0.5 font-medium', c.delta > 0 ? 'text-coral-600 dark:text-coral-400' : 'text-mint-700 dark:text-mint-300')}>
                           {c.delta > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}{formatPct(Math.abs(c.deltaRatio))}
                         </span>
                       )}
-                      {c.deltaRatio === null && c.before === 0 && <span className="text-slate-400">{t('ins.new')}</span>}
+                      {c.deltaRatio === null && c.before === 0 && <span>{t('ins.new')}</span>}
                     </div>
                   </div>
                   <Money className="shrink-0 text-right">{money(c.amount)}</Money>
@@ -122,7 +122,7 @@ export function InsightsPage({ monthKey, onMonthChange }: { monthKey: string; on
           <>
             <TrendChart points={points} currency={state.currency} highlight={monthKey} />
             <table className="mt-3 w-full text-xs">
-              <thead className="text-slate-500"><tr><th className="text-left font-normal">{t('ins.month')}</th><th className="text-right font-normal">{t('ins.income')}</th><th className="text-right font-normal">{t('ins.expenses')}</th><th className="text-right font-normal">{t('ins.kept')}</th></tr></thead>
+              <thead className="text-slate-500 dark:text-slate-400"><tr><th className="text-left font-normal">{t('ins.month')}</th><th className="text-right font-normal">{t('ins.income')}</th><th className="text-right font-normal">{t('ins.expenses')}</th><th className="text-right font-normal">{t('ins.kept')}</th></tr></thead>
               <tbody className="tnum">
                 {points.map((p) => (
                   <tr key={p.key} className={p.key === monthKey ? 'font-semibold' : ''}>
@@ -138,12 +138,12 @@ export function InsightsPage({ monthKey, onMonthChange }: { monthKey: string; on
         ) : (
           <>
             <div className="mb-3 grid grid-cols-3 gap-2">
-              <div><div className="text-xs text-slate-500">{t('ins.income')}</div><Money>{money(yearIncome, true)}</Money></div>
-              <div><div className="text-xs text-slate-500">{t('ins.expenses')}</div><Money>{money(yearExpenses, true)}</Money></div>
-              <div><div className="text-xs text-slate-500">{t('ins.kept')}</div><Money className={yearIncome - yearExpenses < 0 ? 'text-coral-600' : 'text-mint-600 dark:text-mint-300'}>{money(yearIncome - yearExpenses, true)}</Money></div>
+              <div><div className="text-xs text-slate-500 dark:text-slate-400">{t('ins.income')}</div><Money>{money(yearIncome, true)}</Money></div>
+              <div><div className="text-xs text-slate-500 dark:text-slate-400">{t('ins.expenses')}</div><Money>{money(yearExpenses, true)}</Money></div>
+              <div><div className="text-xs text-slate-500 dark:text-slate-400">{t('ins.kept')}</div><Money className={yearIncome - yearExpenses < 0 ? 'text-coral-600 dark:text-coral-400' : 'text-mint-700 dark:text-mint-300'}>{money(yearIncome - yearExpenses, true)}</Money></div>
             </div>
             <YearChart points={year} currency={state.currency} highlight={monthKey} />
-            <p className="mt-2 text-xs text-slate-500">{t('ins.yearNote', { year: splitKey(monthKey).year })}{projected && t('ins.projected')}</p>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t('ins.yearNote', { year: splitKey(monthKey).year })}{projected && t('ins.projected')}</p>
           </>
         )}
       </Card>
@@ -153,7 +153,7 @@ export function InsightsPage({ monthKey, onMonthChange }: { monthKey: string; on
           <SectionTitle sub={t('savings.yearAside', { amount: money(yearSetAside, true), year: splitKey(monthKey).year })}>{t('savings.title')}</SectionTitle>
           <div className="mb-3 flex flex-wrap items-baseline gap-x-2">
             <Money className="text-2xl">{money(saved)}</Money>
-            <span className="text-sm text-slate-500">{t('savings.total', { n: state.pots.length, unit: state.pots.length === 1 ? t('savings.pot1') : t('savings.potN') })}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{t('savings.total', { n: state.pots.length, unit: state.pots.length === 1 ? t('savings.pot1') : t('savings.potN') })}</span>
           </div>
           <ul className="space-y-2">
             {state.pots.map((p) => {
@@ -163,7 +163,7 @@ export function InsightsPage({ monthKey, onMonthChange }: { monthKey: string; on
                   <div className="flex items-center gap-2 text-sm">
                     <CategoryDot icon={p.icon} color={p.color} size="sm" />
                     <span className="font-medium">{p.name}</span>
-                    <span className="ml-auto"><Money>{money(b, true)}</Money>{p.target && <span className="text-xs text-slate-500"> {t('ins.of')} {money(p.target, true)}</span>}</span>
+                    <span className="ml-auto"><Money>{money(b, true)}</Money>{p.target && <span className="text-xs text-slate-500 dark:text-slate-400"> {t('ins.of')} {money(p.target, true)}</span>}</span>
                   </div>
                   {p.target && <div className="mt-1.5 h-1.5 rounded-full bg-slate-900/5 dark:bg-white/10"><div className="h-full rounded-full" style={{ width: `${Math.min(100, (b / p.target) * 100)}%`, background: p.color }} /></div>}
                 </li>

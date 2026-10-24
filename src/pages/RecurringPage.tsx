@@ -48,14 +48,14 @@ export function RecurringPage() {
       <div className="flex items-end justify-between gap-3 px-1">
         <div>
           <h1 className="font-display text-2xl font-bold">{t('rec.heading')}</h1>
-          <p className="text-sm text-slate-500">{t('rec.summary', { n: live.length, month: money(monthlyEq, true), year: money(monthlyEq * 12, true) })}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">{t('rec.summary', { n: live.length, month: money(monthlyEq, true), year: money(monthlyEq * 12, true) })}</p>
         </div>
         <Button onClick={() => setEditing('new')}><Plus size={16} /> {t('common.new')}</Button>
       </div>
 
       {state.recurring.length > 5 && (
         <div className="relative">
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('rec.search')} type="search" className="pl-9" />
         </div>
       )}
@@ -94,15 +94,15 @@ export function RecurringPage() {
                       </button>
                       <div className="shrink-0 text-right">
                         <Money>{fit(r.amount)}</Money>
-                        {r.intervalMonths > 1 && <div className="whitespace-nowrap text-[11px] text-slate-500">{t('common.perMonth', { amount: money(monthlyEquivalent(r), true) })}</div>}
+                        {r.intervalMonths > 1 && <div className="whitespace-nowrap text-[11px] text-slate-500 dark:text-slate-400">{t('common.perMonth', { amount: money(monthlyEquivalent(r), true) })}</div>}
                       </div>
-                      <button onClick={() => toggle(r)} className="inline-flex size-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-900/5 max-[359px]:hidden dark:hover:bg-white/10" aria-label={r.active ? t('rec.pauseA', { name: r.name }) : t('rec.resumeA', { name: r.name })} title={r.active ? t('rec.pause') : t('rec.resume')}>
+                      <button onClick={() => toggle(r)} className="inline-flex size-9 items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-900/5 max-[359px]:hidden dark:hover:bg-white/10" aria-label={r.active ? t('rec.pauseA', { name: r.name }) : t('rec.resumeA', { name: r.name })} title={r.active ? t('rec.pause') : t('rec.resume')}>
                         {r.active ? <Pause size={16} /> : <Play size={16} />}
                       </button>
                     </div>
                     {credit && (
                       <div className="ml-13 mt-2">
-                        <div className="flex flex-wrap justify-between gap-x-3 text-[11px] text-slate-500">
+                        <div className="flex flex-wrap justify-between gap-x-3 text-[11px] text-slate-500 dark:text-slate-400">
                           <span>{t('rec.payments', { done: credit.done, total: credit.total })}{chargedNow && credit.done > 0 ? t('rec.inclThisMonth') : ''}</span>
                           <span>{credit.left === 0 ? (chargedNow ? t('rec.lastPayment') : t('rec.paidOff')) : t('rec.toGo', { amount: money(credit.remaining, true), month: formatMonth(r.endMonth!, 'short') })}</span>
                         </div>

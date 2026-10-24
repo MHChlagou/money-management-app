@@ -77,12 +77,12 @@ export function SavingsCard({ monthKey }: { monthKey: string }) {
                       {ratio !== null && (
                         <div className="mt-1.5 h-1.5 rounded-full bg-slate-900/5 dark:bg-white/10"><div className="h-full rounded-full" style={{ width: `${ratio * 100}%`, background: p.color }} /></div>
                       )}
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {ratio === 1 ? t('savings.targetReached') : thisMonth !== 0 ? t('savings.thisMonth', { amount: `${thisMonth > 0 ? '+' : ''}${money(thisMonth, true)}` }) : t('savings.nothingMonth')}
                         {ratio !== null && ratio < 1 && `, ${t('savings.toGo', { amount: money(p.target! - balance, true), target: money(p.target!, true) })}`}
                       </div>
                     </div>
-                    <ChevronRight size={16} className="shrink-0 text-slate-400" />
+                    <ChevronRight size={16} className="shrink-0 text-slate-500 dark:text-slate-400" />
                   </button>
                 </li>
               )
@@ -104,23 +104,23 @@ export function SavingsCard({ monthKey }: { monthKey: string }) {
         {detailPot && (
           <div className="space-y-4">
             <div className="rounded-2xl p-4 text-center" style={{ background: `${detailPot.color}1f` }}>
-              <div className="text-xs text-slate-500">{t('savings.savedSoFar')}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{t('savings.savedSoFar')}</div>
               <Money className="text-3xl">{money(potBalance(detailPot))}</Money>
-              {detailPot.target && <div className="text-xs text-slate-500">{t('savings.pctOf', { pct: Math.round((potBalance(detailPot) / detailPot.target) * 100), target: money(detailPot.target) })}</div>}
+              {detailPot.target && <div className="text-xs text-slate-500 dark:text-slate-400">{t('savings.pctOf', { pct: Math.round((potBalance(detailPot) / detailPot.target) * 100), target: money(detailPot.target) })}</div>}
             </div>
             <div className="grid grid-cols-2 gap-2">
               <Button variant="mint" onClick={() => setContrib({ potId: detailPot.id })}><Plus size={16} /> {t('savings.setAside')}</Button>
               <Button variant="secondary" onClick={() => setContrib({ potId: detailPot.id, withdraw: true })}>{t('savings.takeOut')}</Button>
             </div>
-            {detailPot.contributions.length === 0 ? <p className="text-center text-sm text-slate-500">{t('savings.noEntries')}</p> : (
+            {detailPot.contributions.length === 0 ? <p className="text-center text-sm text-slate-500 dark:text-slate-400">{t('savings.noEntries')}</p> : (
               <ul className="max-h-64 divide-y divide-line overflow-y-auto overflow-x-hidden dark:divide-line-dark">
                 {[...detailPot.contributions].sort((a, b) => b.date.localeCompare(a.date)).map((c) => (
                   <li key={c.id} className="flex items-center gap-3 py-2 text-sm">
                     <div className="min-w-0 flex-1">
                       <div>{formatDay(c.date)}</div>
-                      {c.note && <div className="truncate text-xs text-slate-500">{c.note}</div>}
+                      {c.note && <div className="truncate text-xs text-slate-500 dark:text-slate-400">{c.note}</div>}
                     </div>
-                    <Money className={c.amount < 0 ? 'text-coral-600 dark:text-coral-400' : 'text-mint-600 dark:text-mint-300'}>{c.amount > 0 ? '+' : ''}{money(c.amount)}</Money>
+                    <Money className={c.amount < 0 ? 'text-coral-600 dark:text-coral-400' : 'text-mint-700 dark:text-mint-300'}>{c.amount > 0 ? '+' : ''}{money(c.amount)}</Money>
                     <IconButton label={t('savings.removeEntry')} onClick={() => removeContribution(detailPot.id, c)}><Trash2 size={15} /></IconButton>
                   </li>
                 ))}
