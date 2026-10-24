@@ -1,32 +1,53 @@
-import { useEffect, useState } from 'react'
-import { CalendarDays, ChartPie, Repeat, Settings, Wallet } from 'lucide-react'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { MotionConfig } from 'motion/react'
+import { Plus } from 'lucide-react'
 import { MonthPage } from './pages/MonthPage'
 import { CalendarPage } from './pages/CalendarPage'
 import { RecurringPage } from './pages/RecurringPage'
-import { InsightsPage } from './pages/InsightsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { currentMonthKey, shiftMonth } from './lib/months'
 import { getState, requestPersistentStorage, useAppState } from './lib/store'
 import { applyTheme, watchSystemTheme } from './lib/theme'
 import { useSwipe } from './lib/useSwipe'
+import { useHideOnScroll } from './lib/useHideOnScroll'
+import { cx } from './components/ui'
+import { openExpenseSheet, setPaletteOpen, useUi } from './lib/ui'
 import { InstallBanner } from './components/InstallBanner'
 import { ToastHost } from './components/Toast'
 import { ConfirmHost } from './components/ConfirmSheet'
-import { cx } from './components/ui'
 import { WelcomeSheet } from './components/WelcomeSheet'
-import { useT, type Key } from './lib/i18n'
+import { ExpenseSheetHost } from './components/ExpenseSheet'
+import { CommandPalette } from './components/CommandPalette'
+import { BottomBar, Sidebar, TopBar } from './components/Navigation'
+import { TABS, type Tab } from './components/tabs'
+import { useT } from './lib/i18n'
 
-type Tab = 'month' | 'calendar' | 'recurring' | 'insights' | 'settings'
-
-const TABS: { id: Tab; label: Key; Icon: typeof Wallet }[] = [
-  { id: 'month', label: 'nav.month', Icon: Wallet },
-  { id: 'calendar', label: 'nav.calendar', Icon: CalendarDays },
-  { id: 'recurring', label: 'nav.recurring', Icon: Repeat },
-  { id: 'insights', label: 'nav.insights', Icon: ChartPie },
-  { id: 'settings', label: 'nav.settings', Icon: Settings },
-]
+// Charts (recharts) are only needed on Insights; loading them on demand keeps the first load light.
+const InsightsPage = lazy(() => import('./pages/InsightsPage').then((m) => ({ default: m.InsightsPage })))
 
 const MONTH_TABS: Tab[] = ['month', 'calendar', 'insights']
+
+const isTyping = (target: EventTarget | null) =>
+  target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+
+/** Desktop shortcuts. Single keys only fire outside fields and when no sheet is open. */
+function useShortcuts({ tab, monthKey, setTab, setMonthKey }: { tab: Tab; monthKey: string; setTab: (t: Tab) => void; setMonthKey: (k: string) => void }) {
+  const { paletteOpen } = useUi()
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPaletteOpen(!paletteOpen); return }
+      if (e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target) || paletteOpen || document.querySelector('[aria-modal="true"]')) return
+      if (e.key === '/') { e.preventDefault(); setPaletteOpen(true) }
+      else if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openExpenseSheet({ monthKey }) }
+      else if (/^[1-5]$/.test(e.key)) setTab(TABS[Number(e.key) - 1].id)
+      else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && MONTH_TABS.includes(tab) && !(e.target instanceof Element && e.target.closest('[role="slider"]'))) {
+        setMonthKey(shiftMonth(monthKey, e.key === 'ArrowLeft' ? -1 : 1))
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [tab, monthKey, paletteOpen, setTab, setMonthKey])
+}
 
 export default function App() {
   const { theme } = useAppState()
@@ -37,54 +58,48 @@ export default function App() {
     () => MONTH_TABS.includes(tab) && setMonthKey((k) => shiftMonth(k, 1)),
     () => MONTH_TABS.includes(tab) && setMonthKey((k) => shiftMonth(k, -1)),
   )
+  useShortcuts({ tab, monthKey, setTab, setMonthKey })
+  const fabHidden = useHideOnScroll()
 
   useEffect(() => { requestPersistentStorage() }, [])
   useEffect(() => { applyTheme(theme) }, [theme])
   useEffect(() => watchSystemTheme(() => getState().theme), [])
   useEffect(() => { window.scrollTo({ top: 0 }) }, [tab])
 
+  const addExpense = () => openExpenseSheet({ monthKey })
+
   return (
-    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">
-      <header className="sticky top-0 z-10 hidden items-center justify-between bg-paper/90 px-4 py-3 backdrop-blur sm:flex dark:bg-paper-dark/90">
-        <div className="flex items-center gap-2 font-display font-semibold">
-          <img src="favicon.svg" alt="" className="size-7 rounded-lg" /> {t('app.name')}
-        </div>
-        <nav className="flex gap-1 rounded-full border border-line bg-card p-1 dark:border-line-dark dark:bg-card-dark">
-          {TABS.map((t_) => (
-            <button key={t_.id} onClick={() => setTab(t_.id)} className={cx('flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium', tab === t_.id ? 'bg-ink-600 text-white' : 'text-slate-600 hover:bg-slate-900/5 dark:text-slate-300 dark:hover:bg-white/10')}>
-              <t_.Icon size={16} /> {t(t_.label)}
-            </button>
-          ))}
-        </nav>
-      </header>
+    <MotionConfig reducedMotion="user">
+      <div className="min-h-dvh md:flex">
+        <Sidebar tab={tab} onTab={setTab} onAdd={addExpense} onSearch={() => setPaletteOpen(true)} />
 
-      <main className="flex-1 px-4 pb-32 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:pb-10" {...swipe}>
-        <InstallBanner />
-        {tab === 'month' && <MonthPage monthKey={monthKey} onMonthChange={setMonthKey} goTo={setTab} />}
-        {tab === 'calendar' && <CalendarPage monthKey={monthKey} onMonthChange={setMonthKey} />}
-        {tab === 'recurring' && <RecurringPage />}
-        {tab === 'insights' && <InsightsPage monthKey={monthKey} onMonthChange={setMonthKey} />}
-        {tab === 'settings' && <SettingsPage />}
-      </main>
+        <main className="mx-auto w-full min-w-0 max-w-[1180px] flex-1 px-4 pb-36 pt-[calc(0.75rem+env(safe-area-inset-top))] md:px-8 md:pb-14 md:pt-8 xl:px-12" {...swipe}>
+          <TopBar onSearch={() => setPaletteOpen(true)} />
+          <InstallBanner />
+          {/* Re-keyed per tab: a short fade marks the switch without moving anything. */}
+          <div key={tab} className="animate-page-in">
+            {tab === 'month' && <MonthPage monthKey={monthKey} onMonthChange={setMonthKey} goTo={setTab} />}
+            {tab === 'calendar' && <CalendarPage monthKey={monthKey} onMonthChange={setMonthKey} />}
+            {tab === 'recurring' && <RecurringPage />}
+            {tab === 'insights' && <Suspense fallback={<div className="h-[70vh]" aria-busy="true" />}><InsightsPage monthKey={monthKey} onMonthChange={setMonthKey} /></Suspense>}
+            {tab === 'settings' && <SettingsPage />}
+          </div>
+        </main>
 
-      <ToastHost />
-      <WelcomeSheet />
-      <ConfirmHost />
+        {tab !== 'settings' && (
+          <button onClick={addExpense} aria-label={t('nav.add')} title={t('nav.add')}
+            className={cx('fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] right-4 z-30 flex size-14 items-center justify-center rounded-[20px] bg-accent text-on-accent shadow-[0_12px_28px_-10px_rgb(5_10_18/0.45)] transition-[transform,opacity] duration-200 ease-ui hover:opacity-90 active:scale-[0.94] md:hidden', fabHidden && 'pointer-events-none translate-y-24 opacity-0')}>
+            <Plus size={26} strokeWidth={2.5} />
+          </button>
+        )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-10 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden" aria-label="Main">
-        <div className="mx-auto flex max-w-md items-center rounded-full border border-line bg-card/95 p-1.5 shadow-xl shadow-ink-950/10 backdrop-blur dark:border-line-dark dark:bg-card-dark/95">
-          {TABS.map((t_) => {
-            const active = tab === t_.id
-            return (
-              <button key={t_.id} onClick={() => setTab(t_.id)} aria-current={active ? 'page' : undefined} aria-label={t(t_.label)}
-                className={cx('flex flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-[10px] font-medium transition', active ? 'bg-ink-600 text-white' : 'text-slate-500 dark:text-slate-400')}>
-                <t_.Icon size={20} strokeWidth={active ? 2.4 : 2} />
-                {t(t_.label)}
-              </button>
-            )
-          })}
-        </div>
-      </nav>
-    </div>
+        <BottomBar tab={tab} onTab={setTab} />
+        <ExpenseSheetHost />
+        <CommandPalette onTab={setTab} onMonth={setMonthKey} monthKey={monthKey} />
+        <ToastHost />
+        <WelcomeSheet />
+        <ConfirmHost />
+      </div>
+    </MotionConfig>
   )
 }

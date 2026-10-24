@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
-import { Button, Card, CategoryDot, cx, Modal, Money, Pill, Row } from '../components/ui'
+import { Button, Card, CategoryDot, cx, Modal, Money, PageHeader, Pill, Row, SectionTitle } from '../components/ui'
 import { MonthNav } from '../components/MonthNav'
-import { OneOffForm } from '../components/OneOffForm'
+import { MonthSwap } from '../components/MonthSwap'
 import { useAppState } from '../lib/store'
-import { appliesToMonth, categoryById, entriesByDay, summarize } from '../lib/calc'
-import { formatMoney, formatMoneyFit } from '../lib/format'
+import { appliesToMonth, categoryById, entriesByDay, summarize, type DayEntry } from '../lib/calc'
+import { formatMoney, formatMoneyFit, formatPct } from '../lib/format'
+import { ReserveGauge, StatCard } from '../components/StatCard'
 import { currentMonthKey, daysInMonth, firstWeekday, formatDay, pad2, weekdayNames } from '../lib/months'
-import { updateMonth } from './MonthPage'
+import { openExpenseSheet } from '../lib/ui'
+import { useMediaQuery } from '../lib/useMediaQuery'
+import { useMonthDirection } from '../lib/useMonthDirection'
 import { useT } from '../lib/i18n'
 
-
-/** Month grid showing what leaves the account on each day. */
+/** Month grid showing what leaves the account on each day. Darker berry means more money out. */
 export function CalendarPage({ monthKey, onMonthChange }: { monthKey: string; onMonthChange: (k: string) => void }) {
   const state = useAppState()
   const t = useT()
@@ -20,89 +22,110 @@ export function CalendarPage({ monthKey, onMonthChange }: { monthKey: string; on
   const days = daysInMonth(monthKey)
   const offset = firstWeekday(monthKey)
   const isCurrent = monthKey === currentMonthKey()
-  const today = isCurrent ? new Date().getDate() : 0
-  const [selected, setSelected] = useState<number | null>(null)
-  const [adding, setAdding] = useState(false)
+  const [today] = useState(() => new Date().getDate())
+  const todayDay = isCurrent ? today : 0
+  const isWide = useMediaQuery('(min-width: 1024px)')
+  const [picked, setPicked] = useState<{ monthKey: string; day: number } | null>(null)
+  const { dir, moved } = useMonthDirection(monthKey)
   const sum = summarize(state, monthKey)
 
   const dayTotal = (d: number) => (byDay.get(d) ?? []).reduce((a, e) => a + e.amount, 0)
   const maxDay = Math.max(1, ...[...byDay.keys()].map(dayTotal))
-  const paidSoFar = isCurrent ? [...byDay.entries()].filter(([d]) => d <= today).reduce((a, [, es]) => a + es.reduce((x, e) => x + e.amount, 0), 0) : 0
+  const paidSoFar = isCurrent ? [...byDay.entries()].filter(([d]) => d <= todayDay).reduce((a, [, es]) => a + es.reduce((x, e) => x + e.amount, 0), 0) : 0
   const noDay = state.recurring.filter((r) => !r.dayOfMonth && appliesToMonth(r, monthKey))
-  const selectedEntries = selected ? (byDay.get(selected) ?? []) : []
+  // On desktop the side panel always shows a day: the one picked, else today, else the busiest one.
+  const busiest = [...byDay.keys()].sort((a, b) => dayTotal(b) - dayTotal(a))[0] ?? 1
+  // Next day with something going out: after today in this month, the first such day in a future one.
+  const nextDay = [...byDay.keys()].sort((a, b) => a - b).find((d) => (isCurrent ? d > todayDay : monthKey > currentMonthKey()))
+  const selected = picked?.monthKey === monthKey ? picked.day : isWide ? (todayDay || busiest) : null
 
   return (
-    <div className="space-y-3">
-      <Card className="py-3"><MonthNav value={monthKey} onChange={onMonthChange} /></Card>
+    <div>
+      <PageHeader title={t('nav.calendar')}>
+        <MonthNav value={monthKey} onChange={onMonthChange} />
+      </PageHeader>
 
-      {isCurrent && (
-        <div className="grid grid-cols-2 gap-3 max-[359px]:grid-cols-1">
-          <Card>
-            <div className="text-xs text-slate-500 dark:text-slate-400">{t('cal.goneOut')}</div>
-            <Money className={money(paidSoFar).length > 11 ? 'text-base' : 'text-xl'}>{money(paidSoFar)}</Money>
-          </Card>
-          <Card>
-            <div className="text-xs text-slate-500 dark:text-slate-400">{t('cal.stillToPay')}</div>
-            <Money className={cx('text-coral-600 dark:text-coral-400', money(Math.max(0, sum.expenses - paidSoFar)).length > 11 ? 'text-base' : 'text-xl')}>{money(Math.max(0, sum.expenses - paidSoFar))}</Money>
-          </Card>
-        </div>
-      )}
-
-      <Card className="p-2 sm:p-4">
-        <div className="mb-1 grid grid-cols-7 text-center text-[11px] font-medium text-slate-500 dark:text-slate-400">
-          {weekdayNames().map((w) => <div key={w}>{w}</div>)}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {Array.from({ length: offset }, (_, i) => <div key={`pad-${i}`} />)}
-          {Array.from({ length: days }, (_, i) => {
-            const d = i + 1
-            const entries = byDay.get(d) ?? []
-            const total = dayTotal(d)
-            // Capped at 0.75 so dark text keeps 4.5:1 contrast on the busiest day in light mode.
-            const intensity = total > 0 ? 0.18 + 0.57 * (total / maxDay) : 0
-            const isToday = d === today
-            const past = isCurrent && d < today
-            return (
-              <button key={d} onClick={() => setSelected(d)} aria-label={`${t('cal.dayLabel', { d })}${total ? `, ${money(total)}` : ''}`}
-                className={cx('relative flex aspect-square flex-col items-center justify-start rounded-xl p-0.5 text-xs transition hover:ring-2 hover:ring-ink-500', isToday && 'ring-2 ring-ink-600 dark:ring-mint-400', past && !total && 'opacity-40')}
-                style={total > 0 ? { background: `color-mix(in srgb, var(--color-ink-600) ${Math.round(intensity * 100)}%, transparent)` } : undefined}>
-                <span className="font-display font-semibold">{d}</span>
-                {total > 0 && <span className="tnum mt-auto w-full truncate text-[10px] leading-tight text-slate-900 dark:text-white">{money(total)}</span>}
-                {entries.length > 1 && <span className="absolute right-1 top-1 size-1.5 rounded-full bg-coral-400" aria-hidden />}
-              </button>
-            )
-          })}
-        </div>
-        <p className="mt-2 text-center text-[11px] text-slate-500 dark:text-slate-400">{t('cal.hint')}</p>
-      </Card>
-
-      {noDay.length > 0 && (
-        <Card>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            {t('cal.noDay', { names: noDay.map((r) => r.name).join(', '), verb: noDay.length === 1 ? t('cal.has') : t('cal.have'), shows: noDay.length === 1 ? t('cal.itShows') : t('cal.theyShow') })}
-          </p>
-        </Card>
-      )}
-
-      <Modal open={selected !== null} title={selected ? formatDay(`${monthKey}-${pad2(selected)}`) : ''} onClose={() => { setSelected(null); setAdding(false) }}>
-        {selected && !adding && (
-          <div className="space-y-3">
-            {selectedEntries.length === 0 ? <p className="text-sm text-slate-500 dark:text-slate-400">{t('cal.nothing')}</p> : (
-              <ul className="divide-y divide-line dark:divide-line-dark">
-                {selectedEntries.map((e) => {
-                  const c = categoryById(state, e.categoryId)
-                  return <Row key={e.id} icon={<CategoryDot icon={c.icon} color={c.color} size="sm" />} title={e.name} badges={<Pill tone={e.source === 'recurring' ? 'brand' : 'neutral'}>{e.source === 'recurring' ? t('src.recurring') : t('src.oneoff')}</Pill>} subtitle={c.name} trailing={<Money>{formatMoneyFit(e.amount, state.currency)}</Money>} />
-                })}
-              </ul>
-            )}
-            {selectedEntries.length > 1 && <div className="text-right text-sm">{t('cal.total')} <Money>{money(dayTotal(selected), false)}</Money></div>}
-            <Button className="w-full" onClick={() => setAdding(true)}><Plus size={16} /> {t('cal.addOnDay')}</Button>
+      <MonthSwap key={monthKey} dir={dir} animateIn={moved} className="grid gap-4 lg:grid-cols-12 lg:items-start lg:gap-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:col-span-12 lg:grid-cols-4">
+            <StatCard label={isCurrent ? t('cal.goneOut') : t('ins.expenses')} value={money(isCurrent ? paidSoFar : sum.expenses)}
+              sub={isCurrent && sum.expenses > 0 ? formatPct(paidSoFar / sum.expenses) : undefined}
+              instrument={isCurrent ? <ReserveGauge fraction={sum.expenses > 0 ? paidSoFar / sum.expenses : 0} /> : undefined} />
+            <StatCard label={t('cal.stillToPay')} tone={isCurrent && sum.expenses > paidSoFar ? 'bad' : 'neutral'}
+              value={isCurrent ? money(Math.max(0, sum.expenses - paidSoFar)) : '–'} sub={isCurrent ? t('stat.daysLeft', { n: days - todayDay + 1 }) : undefined} />
+            <StatCard label={t('stat.biggestDay')} value={byDay.size ? money(dayTotal(busiest)) : '–'} sub={byDay.size ? formatDay(`${monthKey}-${pad2(busiest)}`) : undefined} />
+            <StatCard label={t('stat.nextCharge')} value={nextDay ? money(dayTotal(nextDay)) : '–'}
+              sub={nextDay ? `${(byDay.get(nextDay) ?? []).map((e) => e.name).join(', ')}, ${formatDay(`${monthKey}-${pad2(nextDay)}`)}` : t('stat.none')} />
           </div>
+        <div className="space-y-4 lg:col-span-8">
+
+          <Card className="p-2.5 sm:p-5">
+            <div className="mb-2 grid grid-cols-7 text-center text-[11px] font-medium capitalize text-muted sm:text-xs">
+              {weekdayNames().map((w) => <div key={w}>{w}</div>)}
+            </div>
+            <div className="grid grid-cols-7 gap-0.5 min-[360px]:gap-1 sm:gap-1.5">
+              {Array.from({ length: offset }, (_, i) => <div key={`pad-${i}`} />)}
+              {Array.from({ length: days }, (_, i) => {
+                const d = i + 1
+                const entries = byDay.get(d) ?? []
+                const total = dayTotal(d)
+                // Capped so text keeps its contrast on the busiest day.
+                const heat = total > 0 ? Math.round(14 + 34 * (total / maxDay)) : 0
+                const past = isCurrent && d < todayDay
+                return (
+                  <button key={d} onClick={() => setPicked({ monthKey, day: d })} aria-pressed={selected === d}
+                    aria-label={`${formatDay(`${monthKey}-${pad2(d)}`)}${total ? `, ${money(total)}` : ''}`}
+                    className={cx('relative flex min-h-11 flex-col items-center justify-start rounded-xl p-1 text-xs sm:aspect-square sm:min-h-0 transition-[transform,box-shadow] duration-150 ease-ui active:scale-[0.95] sm:rounded-2xl sm:p-1.5',
+                      selected === d ? 'ring-2 ring-deep-900 dark:ring-tide-300' : 'hover:ring-1 hover:ring-hairline', past && !total && 'text-muted', !total && 'bg-sunk/50')}
+                    style={total > 0 ? { background: `color-mix(in srgb, var(--color-ebb-400) ${heat}%, var(--surface))` } : undefined}>
+                    <span className={cx('flex size-6 items-center justify-center rounded-full font-display font-semibold sm:size-7 sm:text-sm', d === todayDay && 'bg-accent text-on-accent')}>{d}</span>
+                    {total > 0 && <span className="tnum mt-auto w-full truncate text-center text-[10px] font-medium leading-tight max-[359px]:hidden sm:text-xs">{money(total)}</span>}
+                    {entries.length > 1 && <span className="absolute right-1 top-1 size-1.5 rounded-full bg-ebb-600 dark:bg-ebb-300 sm:right-1.5 sm:top-1.5" aria-hidden />}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="mt-3 text-center text-xs text-muted">{t('cal.hint')}</p>
+          </Card>
+
+          {noDay.length > 0 && (
+            <p className="rounded-2xl bg-sand-100 px-4 py-3 text-sm text-sand-700 dark:bg-sand-400/10 dark:text-sand-300">
+              {t('cal.noDay', { names: noDay.map((r) => r.name).join(', '), verb: noDay.length === 1 ? t('cal.has') : t('cal.have'), shows: noDay.length === 1 ? t('cal.itShows') : t('cal.theyShow') })}
+            </p>
+          )}
+        </div>
+
+        {isWide && selected !== null && (
+          <Card className="lg:sticky lg:top-8 lg:col-span-4">
+            <SectionTitle>{formatDay(`${monthKey}-${pad2(selected)}`)}</SectionTitle>
+            <DayDetails entries={byDay.get(selected) ?? []} total={dayTotal(selected)} currency={state.currency} onAdd={() => openExpenseSheet({ monthKey, day: selected })} />
+          </Card>
         )}
-        {selected && adding && (
-          <OneOffForm monthKey={monthKey} day={selected} onSave={(e) => { updateMonth(monthKey, (m) => ({ ...m, oneOffs: [...m.oneOffs, e] })); setAdding(false) }} onCancel={() => setAdding(false)} />
-        )}
-      </Modal>
+      </MonthSwap>
+
+      {!isWide && (
+        <Modal open={selected !== null} title={selected ? formatDay(`${monthKey}-${pad2(selected)}`) : ''} onClose={() => setPicked(null)}>
+          {selected !== null && <DayDetails entries={byDay.get(selected) ?? []} total={dayTotal(selected)} currency={state.currency} onAdd={() => { setPicked(null); openExpenseSheet({ monthKey, day: selected }) }} />}
+        </Modal>
+      )}
+    </div>
+  )
+}
+
+function DayDetails({ entries, total, currency, onAdd }: { entries: DayEntry[]; total: number; currency: string; onAdd: () => void }) {
+  const state = useAppState()
+  const t = useT()
+  return (
+    <div className="space-y-4">
+      {entries.length === 0 ? <p className="text-sm text-muted">{t('cal.nothing')}</p> : (
+        <ul className="-my-1 divide-y divide-hairline">
+          {entries.map((e) => {
+            const c = categoryById(state, e.categoryId)
+            return <Row key={e.id} icon={<CategoryDot icon={c.icon} color={c.color} size="sm" />} title={e.name} badges={<Pill tone={e.source === 'recurring' ? 'brand' : 'neutral'}>{e.source === 'recurring' ? t('src.recurring') : t('src.oneoff')}</Pill>} subtitle={c.name} trailing={<Money>{formatMoneyFit(e.amount, currency)}</Money>} />
+          })}
+        </ul>
+      )}
+      {entries.length > 1 && <div className="flex justify-between border-t border-hairline pt-3 text-sm"><span className="text-muted">{t('cal.total')}</span><Money>{formatMoney(total, currency)}</Money></div>}
+      <Button variant="secondary" className="w-full" onClick={onAdd}><Plus size={16} /> {t('cal.addOnDay')}</Button>
     </div>
   )
 }

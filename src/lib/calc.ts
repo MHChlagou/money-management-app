@@ -1,7 +1,8 @@
-import type { AppState, Category, MonthRecord, RecurringItem, RecurringKind, SavingsPot } from './types'
+import type { AppState, Category, MonthRecord, OneOffExpense, RecurringItem, RecurringKind, SavingsPot } from './types'
 import { emptyMonth } from './types'
-import { daysInMonth, lastMonths, monthsBetween, monthsOfYear, splitKey } from './months'
+import { daysInMonth, lastMonths, monthKey, monthsBetween, monthsOfYear, splitKey } from './months'
 import { categoryName, t } from './i18n'
+import { parseAmount } from './format'
 
 export interface ResolvedLine {
   id: string
@@ -183,13 +184,111 @@ export const entriesByDay = (state: AppState, key: string): Map<number, DayEntry
 /** Monthly-equivalent cost of a recurring item, for "what does this really cost per month". */
 export const monthlyEquivalent = (item: RecurringItem) => item.amount / (item.intervalMonths || 1)
 
-/** Days left in the month (including today) and the amount that can be spent per day to end at zero. */
-export const runway = (state: AppState, key: string) => {
+export interface SpendingPace {
+  /** Days left in the month, today included. 0 for past months. */
+  daysLeft: number
+  /** What can be spent per day from now on so the month ends at zero. */
+  perDay: number
+  isCurrent: boolean
+  /**
+   * Current month only: how far one-off spending so far is below (positive) or above (negative) an even pace
+   * through the money left for one-offs after fixed costs and savings. Null when there is no such money.
+   */
+  ahead: number | null
+}
+
+/** Safe daily spend for the rest of the month, and whether one-off spending is ahead of or behind an even pace. */
+export const spendingPace = (state: AppState, key: string, now = new Date()): SpendingPace => {
   const s = summarize(state, key)
-  const now = new Date()
-  const isCurrent = key === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const daysLeft = isCurrent ? daysInMonth(key) - now.getDate() + 1 : key > `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}` ? daysInMonth(key) : 0
-  return { daysLeft, perDay: daysLeft > 0 ? Math.max(0, s.remaining) / daysLeft : 0, isCurrent }
+  const nowKey = monthKey(now)
+  const days = daysInMonth(key)
+  const isCurrent = key === nowKey
+  const daysLeft = isCurrent ? days - now.getDate() + 1 : key > nowKey ? days : 0
+  const perDay = daysLeft > 0 ? Math.max(0, s.remaining) / daysLeft : 0
+  const flexible = s.income - s.fixed - s.setAside
+  if (!isCurrent || flexible <= 0) return { daysLeft, perDay, isCurrent, ahead: null }
+  const today = now.getDate()
+  const spentSoFar = sum(getMonth(state, key).oneOffs.filter((e) => Number(e.date.slice(8, 10)) <= today).map((e) => e.amount))
+  return { daysLeft, perDay, isCurrent, ahead: flexible * (today / days) - spentSoFar }
+}
+
+/** One point per day with what is left after everything dated up to and including that day. Day 0 is the start. */
+export interface BalancePoint { day: number; balance: number; out: number; entries: DayEntry[] }
+
+/** The month as a draining balance: income at the start, minus expenses and pot moves on the day they happen. */
+export const dailyBalance = (state: AppState, key: string): BalancePoint[] => {
+  const income = summarize(state, key).income
+  const byDay = entriesByDay(state, key)
+  const potsByDay = new Map<number, number>()
+  state.pots.forEach((p) => p.contributions.filter((c) => c.date.startsWith(key)).forEach((c) => {
+    const d = Number(c.date.slice(8, 10))
+    potsByDay.set(d, (potsByDay.get(d) ?? 0) + c.amount)
+  }))
+  const points: BalancePoint[] = [{ day: 0, balance: income, out: 0, entries: [] }]
+  let balance = income
+  for (let d = 1; d <= daysInMonth(key); d++) {
+    const entries = byDay.get(d) ?? []
+    const out = sum(entries.map((e) => e.amount)) + (potsByDay.get(d) ?? 0)
+    balance -= out
+    points.push({ day: d, balance, out, entries })
+  }
+  return points
+}
+
+export interface ForecastMonth {
+  key: string
+  summary: MonthSummary
+  /** Recurring items whose last payment falls in this month. */
+  ending: RecurringItem[]
+  /** Non-monthly charges (quarterly, yearly) that land in this month. */
+  lumps: ResolvedLine[]
+}
+
+/** The next `n` months after `fromKey`, projected from default salary, recurring costs and anything already entered. */
+export const forecast = (state: AppState, fromKey: string, n = 6): ForecastMonth[] =>
+  Array.from({ length: n }, (_, i) => shiftMonthKey(fromKey, i + 1)).map((key) => ({
+    key,
+    summary: summarize(state, key),
+    ending: state.recurring.filter((r) => r.active && r.endMonth === key),
+    lumps: resolveLines(state, key).filter((l) => l.intervalMonths > 1 && !l.skipped),
+  }))
+
+export type SearchHit =
+  | { kind: 'oneoff'; expense: OneOffExpense; category: Category }
+  | { kind: 'recurring'; item: RecurringItem; category: Category }
+
+/** Every one-off and recurring line whose name, category or exact amount matches. Newest one-offs first. */
+export const searchEntries = (state: AppState, query: string, limit = 30): SearchHit[] => {
+  const q = query.trim().toLowerCase()
+  if (!q) return []
+  const amount = /\d/.test(q) ? parseAmount(q) : 0
+  const matches = (name: string, category: Category, value: number) =>
+    name.toLowerCase().includes(q) || category.name.toLowerCase().includes(q) || (amount > 0 && Math.abs(value - amount) < 0.005)
+  const recurring: SearchHit[] = state.recurring
+    .map((item) => ({ kind: 'recurring' as const, item, category: categoryById(state, item.categoryId) }))
+    .filter((h) => matches(h.item.name, h.category, h.item.amount))
+  const oneOffs: SearchHit[] = Object.values(state.months).flatMap((m) => m.oneOffs)
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .map((expense) => ({ kind: 'oneoff' as const, expense, category: categoryById(state, expense.categoryId) }))
+    .filter((h) => matches(h.expense.name, h.category, h.expense.amount))
+  return [...recurring, ...oneOffs].slice(0, limit)
+}
+
+export interface RecentExpense { name: string; amount: number; categoryId: string }
+
+/** The most recent one-offs with distinct names, for one-tap quick add. */
+export const recentExpenses = (state: AppState, limit = 6): RecentExpense[] => {
+  const seen = new Set<string>()
+  const out: RecentExpense[] = []
+  const all = Object.values(state.months).flatMap((m) => m.oneOffs).sort((a, b) => b.date.localeCompare(a.date))
+  for (const e of all) {
+    const name = e.name.trim().toLowerCase()
+    if (seen.has(name)) continue
+    seen.add(name)
+    out.push({ name: e.name, amount: e.amount, categoryId: e.categoryId })
+    if (out.length === limit) break
+  }
+  return out
 }
 
 /** Progress of a credit with an end month: payments made, payments left, remaining balance. */

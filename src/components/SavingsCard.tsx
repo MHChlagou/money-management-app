@@ -61,7 +61,7 @@ export function SavingsCard({ monthKey }: { monthKey: string }) {
         </Empty>
       ) : (
         <>
-          <ul className="divide-y divide-line dark:divide-line-dark">
+          <ul className="divide-y divide-hairline">
             {state.pots.map((p) => {
               const balance = potBalance(p)
               const thisMonth = potMonthTotal(p, monthKey)
@@ -76,20 +76,20 @@ export function SavingsCard({ monthKey }: { monthKey: string }) {
                         <Money className="shrink-0">{money(balance, true)}</Money>
                       </div>
                       {ratio !== null && (
-                        <div className="mt-1.5 h-1.5 rounded-full bg-slate-900/5 dark:bg-white/10"><div className="h-full rounded-full" style={{ width: `${ratio * 100}%`, background: p.color }} /></div>
+                        <div className="mt-1.5 h-1.5 rounded-full bg-sunk"><div className="h-full rounded-full" style={{ width: `${ratio * 100}%`, background: p.color }} /></div>
                       )}
-                      <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      <div className="mt-1 text-xs text-muted">
                         {ratio === 1 ? t('savings.targetReached') : thisMonth !== 0 ? t('savings.thisMonth', { amount: `${thisMonth > 0 ? '+' : ''}${money(thisMonth, true)}` }) : t('savings.nothingMonth')}
                         {ratio !== null && ratio < 1 && `, ${t('savings.toGo', { amount: money(p.target! - balance, true), target: money(p.target!, true) })}`}
                       </div>
                     </div>
-                    <ChevronRight size={16} className="shrink-0 text-slate-500 dark:text-slate-400" />
+                    <ChevronRight size={16} className="shrink-0 text-muted" />
                   </button>
                 </li>
               )
             })}
           </ul>
-          <button onClick={() => setPotForm('new')} className="mt-2 text-xs font-medium text-ink-600 hover:underline dark:text-ink-200">{t('savings.newPot')}</button>
+          <button onClick={() => setPotForm('new')} className="mt-2 text-[13px] font-medium text-tide-700 hover:underline dark:text-tide-300">{t('savings.newPot')}</button>
         </>
       )}
 
@@ -105,23 +105,23 @@ export function SavingsCard({ monthKey }: { monthKey: string }) {
         {detailPot && (
           <div className="space-y-4">
             <div className="rounded-2xl p-4 text-center" style={{ background: `${detailPot.color}1f` }}>
-              <div className="text-xs text-slate-500 dark:text-slate-400">{t('savings.savedSoFar')}</div>
+              <div className="text-xs text-muted">{t('savings.savedSoFar')}</div>
               <Money className="text-3xl">{money(potBalance(detailPot))}</Money>
-              {detailPot.target && <div className="text-xs text-slate-500 dark:text-slate-400">{t('savings.pctOf', { pct: Math.round((potBalance(detailPot) / detailPot.target) * 100), target: money(detailPot.target) })}</div>}
+              {detailPot.target && <div className="text-xs text-muted">{t('savings.pctOf', { pct: Math.round((potBalance(detailPot) / detailPot.target) * 100), target: money(detailPot.target) })}</div>}
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="mint" onClick={() => setContrib({ potId: detailPot.id })}><Plus size={16} /> {t('savings.setAside')}</Button>
+              <Button variant="tide" onClick={() => setContrib({ potId: detailPot.id })}><Plus size={16} /> {t('savings.setAside')}</Button>
               <Button variant="secondary" onClick={() => setContrib({ potId: detailPot.id, withdraw: true })}>{t('savings.takeOut')}</Button>
             </div>
-            {detailPot.contributions.length === 0 ? <p className="text-center text-sm text-slate-500 dark:text-slate-400">{t('savings.noEntries')}</p> : (
-              <ul className="max-h-64 divide-y divide-line overflow-y-auto overflow-x-hidden dark:divide-line-dark">
+            {detailPot.contributions.length === 0 ? <p className="text-center text-sm text-muted">{t('savings.noEntries')}</p> : (
+              <ul className="max-h-64 divide-y divide-hairline overflow-y-auto overflow-x-hidden">
                 {[...detailPot.contributions].sort((a, b) => b.date.localeCompare(a.date)).map((c) => (
                   <li key={c.id} className="flex items-center gap-3 py-2 text-sm">
                     <div className="min-w-0 flex-1">
                       <div>{formatDay(c.date)}</div>
-                      {c.note && <div className="truncate text-xs text-slate-500 dark:text-slate-400">{c.note}</div>}
+                      {c.note && <div className="truncate text-xs text-muted">{c.note}</div>}
                     </div>
-                    <Money className={c.amount < 0 ? 'text-coral-600 dark:text-coral-400' : 'text-mint-700 dark:text-mint-300'}>{c.amount > 0 ? '+' : ''}{money(c.amount)}</Money>
+                    <Money className={c.amount < 0 ? 'text-ebb-600 dark:text-ebb-300' : 'text-tide-700 dark:text-tide-300'}>{c.amount > 0 ? '+' : ''}{money(c.amount)}</Money>
                     <IconButton label={t('savings.removeEntry')} onClick={() => removeContribution(detailPot.id, c)}><Trash2 size={15} /></IconButton>
                   </li>
                 ))}
@@ -150,17 +150,17 @@ function PotForm({ initial, onSave, onDelete, onCancel }: { initial?: SavingsPot
       </div>
       <Field label={t('cat.icon')}>
         <div className="grid grid-cols-6 gap-1">
-          {POT_ICONS.map((i) => <button key={i} type="button" onClick={() => setIcon(i)} className={cx('rounded-lg py-1.5 text-xl', i === icon ? 'bg-ink-50 ring-2 ring-ink-500 dark:bg-ink-500/20' : 'hover:bg-slate-900/5 dark:hover:bg-white/10')} aria-label={t('cat.iconA', { icon: i })} aria-pressed={i === icon}>{i}</button>)}
+          {POT_ICONS.map((i) => <button key={i} type="button" onClick={() => setIcon(i)} className={cx('rounded-lg py-1.5 text-xl', i === icon ? 'bg-tide-50 ring-2 ring-tide-500 dark:bg-tide-400/15' : 'hover:bg-sunk')} aria-label={t('cat.iconA', { icon: i })} aria-pressed={i === icon}>{i}</button>)}
         </div>
       </Field>
       <Field label={t('cat.colour')}>
         <div className="flex flex-wrap gap-2">
-          {CATEGORY_COLORS.map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={cx('size-8 rounded-full', c === color && 'ring-2 ring-ink-600 ring-offset-2 dark:ring-white dark:ring-offset-card-dark')} style={{ background: c }} aria-label={t('cat.colourA', { colour: c })} aria-pressed={c === color} />)}
+          {CATEGORY_COLORS.map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={cx('size-8 rounded-full', c === color && 'ring-2 ring-deep-900 ring-offset-2 ring-offset-surface dark:ring-white')} style={{ background: c }} aria-label={t('cat.colourA', { colour: c })} aria-pressed={c === color} />)}
         </div>
       </Field>
       <Field label={t('savings.target')} hint={t('savings.targetHint')}><AmountInput value={target} onChange={setTarget} /></Field>
       <div className="flex items-center justify-between gap-2 pt-2">
-        {onDelete ? <IconButton label={t('savings.deletePot')} className="text-coral-600" onClick={onDelete}><Trash2 size={18} /></IconButton> : <span />}
+        {onDelete ? <IconButton label={t('savings.deletePot')} className="text-ebb-600" onClick={onDelete}><Trash2 size={18} /></IconButton> : <span />}
         <div className="flex gap-2">
           <Button type="button" variant="secondary" onClick={onCancel}>{t('common.cancel')}</Button>
           <Button type="submit" disabled={!valid}>{initial ? t('common.save') : t('common.create')}</Button>
@@ -183,7 +183,7 @@ function ContributionForm({ monthKey, pots, potId, withdraw, onSave, onCancel }:
       {!potId && (
         <Field label={t('savings.pot')}>
           <div className="flex flex-wrap gap-1.5" role="radiogroup">
-            {pots.map((p) => <button key={p.id} type="button" role="radio" aria-checked={p.id === pot} onClick={() => setPot(p.id)} className={cx('flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm', p.id === pot ? 'border-ink-500 bg-ink-50 font-semibold text-ink-700 dark:bg-ink-500/20 dark:text-ink-100' : 'border-line dark:border-line-dark')}>{p.icon} {p.name}</button>)}
+            {pots.map((p) => <button key={p.id} type="button" role="radio" aria-checked={p.id === pot} onClick={() => setPot(p.id)} className={cx('flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm', p.id === pot ? 'border-tide-500 bg-tide-50 font-semibold text-tide-700 dark:bg-tide-400/15 dark:text-tide-200' : 'border-hairline')}>{p.icon} {p.name}</button>)}
           </div>
         </Field>
       )}
@@ -194,7 +194,7 @@ function ContributionForm({ monthKey, pots, potId, withdraw, onSave, onCancel }:
       <Field label={t('common.note')}><Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={withdraw ? t('savings.noteOut') : t('savings.noteIn')} /></Field>
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>{t('common.cancel')}</Button>
-        <Button type="submit" variant={withdraw ? 'primary' : 'mint'} disabled={!valid}>{withdraw ? t('savings.takeOut') : t('savings.setAside')}</Button>
+        <Button type="submit" variant={withdraw ? 'primary' : 'tide'} disabled={!valid}>{withdraw ? t('savings.takeOut') : t('savings.setAside')}</Button>
       </div>
     </form>
   )

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { ChevronRight, Download, FileSpreadsheet, Plus, Trash2, Upload } from 'lucide-react'
-import { AmountInput, Button, Card, CategoryDot, cx, Field, IconButton, Input, Modal, SectionTitle, Segmented, Select } from '../components/ui'
+import { AmountInput, Button, Card, CategoryDot, cx, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Segmented, Select } from '../components/ui'
 import { getState, migrate, replaceState, setState, useAppState } from '../lib/store'
 import { allTransactions } from '../lib/calc'
 import { CATEGORY_COLORS, emptyState, type Category, type Language, type Theme } from '../lib/types'
@@ -41,7 +41,7 @@ export function SettingsPage() {
 
   const download = (content: string, type: string, ext: string) => {
     const url = URL.createObjectURL(new Blob([content], { type }))
-    Object.assign(document.createElement('a'), { href: url, download: `monthly-money-${new Date().toISOString().slice(0, 10)}.${ext}` }).click()
+    Object.assign(document.createElement('a'), { href: url, download: `reserve-${new Date().toISOString().slice(0, 10)}.${ext}` }).click()
     URL.revokeObjectURL(url)
   }
   const exportJson = () => download(JSON.stringify(getState(), null, 2), 'application/json', 'json')
@@ -106,21 +106,17 @@ export function SettingsPage() {
 
   const isIos = /iP(hone|ad|od)/.test(navigator.userAgent)
   const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
-  const labelCls = 'mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300'
+  const labelCls = 'mb-1 block text-sm font-medium text-ink/80'
 
   return (
-    <div className="space-y-3">
-      <h1 className="px-1 font-display text-2xl font-bold">{t('set.heading')}</h1>
-
+    <div>
+      <PageHeader title={t('set.heading')} />
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-12 lg:items-start lg:gap-6">
+      <div className="min-w-0 space-y-4 lg:col-span-7 lg:space-y-6">
       <Card>
         <SectionTitle>{t('set.prefs')}</SectionTitle>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <span className={labelCls} id="language-label">{t('set.language')}</span>
-            <div className="pt-1" aria-labelledby="language-label">
-              <Segmented<Language> value={state.language} onChange={(language) => setState((s) => ({ ...s, language }))} options={[{ value: 'en', label: 'English' }, { value: 'fr', label: 'Français' }]} />
-            </div>
-          </div>
+        {/* Paired fields first, then the two full-width choices, so no field sits alone in a row. */}
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
           <Field label={t('set.name')} hint={t('set.nameHint')}>
             <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} onBlur={() => setState((s) => ({ ...s, userName: nameDraft.trim() || undefined }))} autoComplete="given-name" />
           </Field>
@@ -129,55 +125,76 @@ export function SettingsPage() {
               {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
             </Select>
           </Field>
-          <Field label={t('set.goal')}>
-            <Input type="number" min={0} max={100} inputMode="numeric" value={goalDraft} onChange={(e) => setGoalDraft(e.target.value)} onBlur={commitGoal} onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }} />
-          </Field>
           <Field label={t('set.defaultSalary')} hint={t('set.defaultSalaryHint')}>
             <AmountInput value={salaryDraft} onChange={setSalaryDraft} onBlur={() => setState((s) => ({ ...s, defaultSalary: parseAmount(salaryDraft) }))} />
           </Field>
-          <div>
+          <Field label={t('set.goal')}>
+            <Input type="number" min={0} max={100} inputMode="numeric" value={goalDraft} onChange={(e) => setGoalDraft(e.target.value)} onBlur={commitGoal} onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }} />
+          </Field>
+          <div className="sm:col-span-2">
+            <span className={labelCls} id="language-label">{t('set.language')}</span>
+            <div className="pt-1" aria-labelledby="language-label">
+              <Segmented<Language> value={state.language} onChange={(language) => setState((s) => ({ ...s, language }))} options={[{ value: 'en', label: 'English' }, { value: 'fr', label: 'Français' }]} />
+            </div>
+          </div>
+          <div className="sm:col-span-2">
             <span className={labelCls} id="appearance-label">{t('set.appearance')}</span>
-            <div className="pt-1" aria-labelledby="appearance-label">
-              <Segmented<Theme> value={state.theme} onChange={(theme) => setState((s) => ({ ...s, theme }))} options={[{ value: 'system', label: t('set.auto') }, { value: 'light', label: t('set.light') }, { value: 'dark', label: t('set.dark') }]} />
+            {/* Each choice previews its dial face: Glacier by day, Lume by night, or both following the system. */}
+            <div className="grid grid-cols-3 gap-2 pt-1" role="radiogroup" aria-labelledby="appearance-label">
+              {([
+                { value: 'system', label: t('set.auto'), face: 'linear-gradient(135deg, #eaf5f8 0 50%, #1a2b42 50% 100%)', hand: '#3a2016' },
+                { value: 'light', label: t('set.light'), face: 'radial-gradient(circle at 50% 36%, #eaf5f8, #a9cbd6)', hand: '#3a2016' },
+                { value: 'dark', label: t('set.dark'), face: 'radial-gradient(circle at 50% 36%, #1a2b42, #060d18)', hand: '#c3f57a' },
+              ] as { value: Theme; label: string; face: string; hand: string }[]).map((o) => (
+                <button key={o.value} type="button" role="radio" aria-checked={state.theme === o.value} onClick={() => setState((s) => ({ ...s, theme: o.value }))}
+                  className={cx('flex flex-col items-center gap-2 rounded-2xl p-3 text-sm font-medium ring-1 transition-[box-shadow,background-color] duration-150', state.theme === o.value ? 'bg-surface ring-2 ring-deep-900 dark:ring-tide-300' : 'ring-hairline hover:bg-sunk')}>
+                  <span className="relative size-12 rounded-full shadow-[inset_0_3px_8px_rgb(0_0_0/0.25)] ring-2 ring-mist-300" style={{ background: o.face }} aria-hidden>
+                    <span className="absolute bottom-1/2 left-1/2 h-[42%] w-[3px] origin-bottom -translate-x-1/2 rotate-[64deg] rounded-full" style={{ background: o.hand }} />
+                  </span>
+                  {o.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
       </Card>
 
       <Card>
-        <SectionTitle sub={t('set.categoriesSub')} action={<Button variant="ghost" className="min-h-8 px-2" onClick={() => setEditingCat('new')}><Plus size={14} /> {t('common.new')}</Button>}>{t('set.categories')}</SectionTitle>
-        <ul className="divide-y divide-line dark:divide-line-dark">
-          {state.categories.map((c) => (
-            <li key={c.id}>
-              <button className="flex w-full items-center gap-3 py-2 text-left" onClick={() => setEditingCat(c)}>
+        <SectionTitle sub={t('set.categoriesSub')} action={<Button variant="ghost" className="min-h-9 px-3" onClick={() => setEditingCat('new')}><Plus size={15} /> {t('common.new')}</Button>}>{t('set.categories')}</SectionTitle>
+        <ul className="-my-1 grid grid-cols-[minmax(0,1fr)] xl:grid-cols-[repeat(2,minmax(0,1fr))] xl:gap-x-6">
+          {state.categories.map((c, i) => (
+            <li key={c.id} className={cx('border-b border-hairline', i === state.categories.length - 1 && 'border-b-0', i === state.categories.length - 2 && i % 2 === 0 && 'xl:border-b-0')}>
+              <button className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors duration-150 hover:bg-sunk/60" onClick={() => setEditingCat(c)}>
                 <CategoryDot icon={c.icon} color={c.color} size="sm" />
                 <span className="min-w-0 flex-1 truncate font-medium">{categoryName(c.id, c.name)}</span>
-                <span className="shrink-0 whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">{c.budget ? t('set.budget', { amount: formatMoneyFit(c.budget, state.currency) }) : t('set.noBudget')}</span>
-                <ChevronRight size={16} className="shrink-0 text-slate-500 dark:text-slate-400" />
+                <span className="shrink-0 whitespace-nowrap text-xs text-muted">{c.budget ? t('set.budget', { amount: formatMoneyFit(c.budget, state.currency) }) : t('set.noBudget')}</span>
+                <ChevronRight size={16} className="shrink-0 text-muted" />
               </button>
             </li>
           ))}
         </ul>
       </Card>
+      </div>
 
+      <div className="min-w-0 space-y-4 lg:col-span-5 lg:space-y-6">
       <Card>
         <SectionTitle>{t('set.backup')}</SectionTitle>
-        <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">{t('set.backupText')}</p>
+        <p className="mb-3 text-sm text-ink/80">{t('set.backupText')}</p>
         <div className="flex flex-wrap gap-2">
           <Button className="w-full sm:w-auto" onClick={exportJson}><Download size={16} /> {t('set.export')}</Button>
           <Button className="w-full sm:w-auto" variant="secondary" onClick={() => fileRef.current?.click()}><Upload size={16} /> {t('set.import')}</Button>
           <Button className="w-full sm:w-auto" variant="secondary" onClick={exportCsv}><FileSpreadsheet size={16} /> {t('set.csv')}</Button>
           <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) importJson(f); e.target.value = '' }} />
         </div>
-        {msg && <p className="mt-3 text-sm text-ink-600 dark:text-ink-200">{msg}</p>}
+        {msg && <p className="mt-3 text-sm text-tide-700 dark:text-tide-300">{msg}</p>}
       </Card>
 
       <Card>
         <SectionTitle>{t('set.install')}</SectionTitle>
         {standalone ? (
-          <p className="text-sm text-slate-600 dark:text-slate-300">{t('set.installed')}</p>
+          <p className="text-sm text-ink/80">{t('set.installed')}</p>
         ) : (
-          <ol className="list-decimal space-y-2 pl-5 text-sm text-slate-600 dark:text-slate-300">
+          <ol className="list-decimal space-y-2 pl-5 text-sm text-ink/80">
             {isIos ? <><li>{t('set.ios1')}</li><li>{t('set.ios2')}</li><li>{t('set.ios3')}</li></> : <><li>{t('set.android')}</li><li>{t('set.windows')}</li></>}
           </ol>
         )}
@@ -191,7 +208,9 @@ export function SettingsPage() {
         </div>
       </Card>
 
-      <p className="text-center text-xs text-slate-600 dark:text-slate-400">{t('set.footer')}</p>
+      <p className="text-center text-xs text-muted md:hidden">{t('set.footer')}</p>
+      </div>
+      </div>
 
       <Modal open={editingCat !== null} title={editingCat === 'new' ? t('cat.new') : t('cat.edit')} onClose={() => setEditingCat(null)}>
         {editingCat && (
@@ -224,17 +243,17 @@ function CategoryForm({ initial, onSave, onDelete, onCancel }: { initial?: Categ
       </div>
       <Field label={t('cat.icon')}>
         <div className="grid grid-cols-8 gap-1">
-          {ICONS.map((i) => <button key={i} type="button" onClick={() => setIcon(i)} className={cx('rounded-lg py-1.5 text-xl', i === icon ? 'bg-ink-50 ring-2 ring-ink-500 dark:bg-ink-500/20' : 'hover:bg-slate-900/5 dark:hover:bg-white/10')} aria-label={t('cat.iconA', { icon: i })} aria-pressed={i === icon}>{i}</button>)}
+          {ICONS.map((i) => <button key={i} type="button" onClick={() => setIcon(i)} className={cx('rounded-lg py-1.5 text-xl', i === icon ? 'bg-tide-50 ring-2 ring-tide-500 dark:bg-tide-400/15' : 'hover:bg-sunk')} aria-label={t('cat.iconA', { icon: i })} aria-pressed={i === icon}>{i}</button>)}
         </div>
       </Field>
       <Field label={t('cat.colour')}>
         <div className="flex flex-wrap gap-2">
-          {CATEGORY_COLORS.map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={cx('size-8 rounded-full', c === color && 'ring-2 ring-ink-600 ring-offset-2 dark:ring-white dark:ring-offset-card-dark')} style={{ background: c }} aria-label={t('cat.colourA', { colour: c })} aria-pressed={c === color} />)}
+          {CATEGORY_COLORS.map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={cx('size-8 rounded-full', c === color && 'ring-2 ring-deep-900 ring-offset-2 ring-offset-surface dark:ring-white')} style={{ background: c }} aria-label={t('cat.colourA', { colour: c })} aria-pressed={c === color} />)}
         </div>
       </Field>
       <Field label={t('cat.budget')} hint={t('cat.budgetHint')}><AmountInput value={budget} onChange={setBudget} /></Field>
       <div className="flex items-center justify-between gap-2 pt-2">
-        {onDelete ? <IconButton label={t('cat.delete')} className="text-coral-600" onClick={onDelete}><Trash2 size={18} /></IconButton> : <span />}
+        {onDelete ? <IconButton label={t('cat.delete')} className="text-ebb-600" onClick={onDelete}><Trash2 size={18} /></IconButton> : <span />}
         <div className="flex gap-2">
           <Button type="button" variant="secondary" onClick={onCancel}>{t('common.cancel')}</Button>
           <Button type="submit" disabled={!valid}>{initial ? t('common.save') : t('common.add')}</Button>

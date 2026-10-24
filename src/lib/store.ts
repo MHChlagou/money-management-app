@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { DEFAULT_CATEGORIES, emptyState, type AppState, type Category } from './types'
+import { DEFAULT_CATEGORIES, emptyMonth, emptyState, type AppState, type Category, type MonthRecord, type OneOffExpense } from './types'
 
 /**
  * A tiny external store persisted to localStorage.
@@ -57,7 +57,7 @@ export const migrate = (input: unknown): AppState => {
     currency: typeof raw.currency === 'string' ? raw.currency : base.currency,
     savingsGoalPct: typeof raw.savingsGoalPct === 'number' ? raw.savingsGoalPct : base.savingsGoalPct,
     defaultSalary: typeof raw.defaultSalary === 'number' ? raw.defaultSalary : base.defaultSalary,
-    theme: raw.theme === 'light' || raw.theme === 'dark' ? (raw.theme as AppState['theme']) : 'system',
+    theme: raw.theme === 'light' || raw.theme === 'dark' || raw.theme === 'system' ? (raw.theme as AppState['theme']) : base.theme,
     categories,
     recurring,
     months,
@@ -100,6 +100,29 @@ export const setState = (updater: (prev: AppState) => AppState) => {
 }
 
 export const replaceState = (next: AppState) => setState(() => next)
+
+/** Applies `fn` to one month's record, creating the record if the month has none yet. */
+export const updateMonth = (key: string, fn: (m: MonthRecord) => MonthRecord) =>
+  setState((s) => ({ ...s, months: { ...s.months, [key]: fn(s.months[key] ?? emptyMonth()) } }))
+
+/** Adds a one-off expense, or replaces the one with the same id. The month comes from the expense's date. */
+export const saveOneOff = (e: OneOffExpense, previousMonthKey?: string) => {
+  const key = e.date.slice(0, 7)
+  setState((s) => {
+    const months = { ...s.months }
+    // An edit can move the expense to another month; drop it from where it was first.
+    if (previousMonthKey && previousMonthKey !== key && months[previousMonthKey]) {
+      months[previousMonthKey] = { ...months[previousMonthKey], oneOffs: months[previousMonthKey].oneOffs.filter((x) => x.id !== e.id) }
+    }
+    const m = months[key] ?? emptyMonth()
+    const exists = m.oneOffs.some((x) => x.id === e.id)
+    months[key] = { ...m, oneOffs: exists ? m.oneOffs.map((x) => (x.id === e.id ? e : x)) : [...m.oneOffs, e] }
+    return { ...s, months }
+  })
+}
+
+export const deleteOneOff = (e: OneOffExpense) =>
+  updateMonth(e.date.slice(0, 7), (m) => ({ ...m, oneOffs: m.oneOffs.filter((x) => x.id !== e.id) }))
 
 const subscribe = (listener: () => void) => {
   listeners.add(listener)
