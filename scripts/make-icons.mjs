@@ -51,7 +51,7 @@ const inRoundedRect = (u, v, x, y, w, h, r) => {
 }
 
 // Design: a coin minted in lume green with a milled edge and an engraved R on a midnight tile, matching
-// public/favicon.svg (drawn on a 64-unit grid).
+// public/favicon-v2.svg (drawn on a 64-unit grid).
 const NIGHT = [12, 22, 36, 255], RIDGE = [93, 143, 28, 255], RING = [93, 143, 28, 255]
 const near = (x, y, [px, py], r) => (x - px) ** 2 + (y - py) ** 2 <= r * r
 const onSegment = (x, y, [ax, ay], [bx, by], w) => {
@@ -87,7 +87,7 @@ const paint = (fullBleed) => (u, v) => {
   return shine(x, y)
 }
 
-writeFileSync('public/pwa-192x192.png', png(192, paint(false)))
-writeFileSync('public/pwa-512x512.png', png(512, paint(true)))
-writeFileSync('public/apple-touch-icon.png', png(180, paint(true)))
+writeFileSync('public/icon-v2-192.png', png(192, paint(false)))
+writeFileSync('public/icon-v2-512.png', png(512, paint(true)))
+writeFileSync('public/apple-touch-icon-v2.png', png(180, paint(true)))
 console.log('icons written')
