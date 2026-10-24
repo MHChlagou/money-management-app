@@ -44,7 +44,7 @@ export default function App() {
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">
-      <header className="sticky top-0 z-10 hidden items-center justify-between px-4 py-3 sm:flex">
+      <header className="sticky top-0 z-10 hidden items-center justify-between bg-paper/90 px-4 py-3 backdrop-blur sm:flex dark:bg-paper-dark/90">
         <div className="flex items-center gap-2 font-display font-semibold">
           <img src="favicon.svg" alt="" className="size-7 rounded-lg" /> {t('app.name')}
         </div>

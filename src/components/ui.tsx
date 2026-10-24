@@ -63,7 +63,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
     <label className="block">
       <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
       {children}
-      {hint && <span className="mt-1 block text-xs text-slate-500">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">{hint}</span>}
     </label>
   )
 }
@@ -103,7 +103,7 @@ export function Modal({ open, title, onClose, children }: { open: boolean; title
 
 export function Empty({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-line p-4 text-center text-sm text-slate-500 dark:border-line-dark">
+    <div className="rounded-xl border border-dashed border-line p-4 text-center text-sm text-slate-500 dark:text-slate-400 dark:border-line-dark">
       <div>{children}</div>
       {action && <div className="mt-3">{action}</div>}
     </div>
@@ -137,7 +137,7 @@ export function Segmented<T extends string>({ value, options, onChange }: { valu
     <div className="inline-flex rounded-full bg-slate-900/5 p-1 dark:bg-white/10" role="radiogroup">
       {options.map((o) => (
         <button key={o.value} type="button" role="radio" aria-checked={value === o.value} onClick={() => onChange(o.value)}
-          className={cx('rounded-full px-3 py-1 text-sm font-medium transition', value === o.value ? 'bg-white text-ink-900 shadow-sm dark:bg-ink-500 dark:text-white' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200')}>
+          className={cx('rounded-full px-3 py-1 text-sm font-medium transition', value === o.value ? 'bg-white text-ink-900 shadow-sm dark:bg-ink-500 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200')}>
           {o.label}
         </button>
       ))}

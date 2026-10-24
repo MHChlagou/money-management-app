@@ -38,18 +38,18 @@ export function CalendarPage({ monthKey, onMonthChange }: { monthKey: string; on
       {isCurrent && (
         <div className="grid grid-cols-2 gap-3 max-[359px]:grid-cols-1">
           <Card>
-            <div className="text-xs text-slate-500">{t('cal.goneOut')}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t('cal.goneOut')}</div>
             <Money className={money(paidSoFar).length > 11 ? 'text-base' : 'text-xl'}>{money(paidSoFar)}</Money>
           </Card>
           <Card>
-            <div className="text-xs text-slate-500">{t('cal.stillToPay')}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t('cal.stillToPay')}</div>
             <Money className={cx('text-coral-600 dark:text-coral-400', money(Math.max(0, sum.expenses - paidSoFar)).length > 11 ? 'text-base' : 'text-xl')}>{money(Math.max(0, sum.expenses - paidSoFar))}</Money>
           </Card>
         </div>
       )}
 
       <Card className="p-2 sm:p-4">
-        <div className="mb-1 grid grid-cols-7 text-center text-[11px] font-medium text-slate-400">
+        <div className="mb-1 grid grid-cols-7 text-center text-[11px] font-medium text-slate-500 dark:text-slate-400">
           {weekdayNames().map((w) => <div key={w}>{w}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-1">
@@ -58,22 +58,22 @@ export function CalendarPage({ monthKey, onMonthChange }: { monthKey: string; on
             const d = i + 1
             const entries = byDay.get(d) ?? []
             const total = dayTotal(d)
-            const intensity = total > 0 ? 0.18 + 0.62 * (total / maxDay) : 0
+            // Capped at 0.75 so dark text keeps 4.5:1 contrast on the busiest day in light mode.
+            const intensity = total > 0 ? 0.18 + 0.57 * (total / maxDay) : 0
             const isToday = d === today
             const past = isCurrent && d < today
-            const dark = intensity > 0.5
             return (
               <button key={d} onClick={() => setSelected(d)} aria-label={`${t('cal.dayLabel', { d })}${total ? `, ${money(total)}` : ''}`}
                 className={cx('relative flex aspect-square flex-col items-center justify-start rounded-xl p-0.5 text-xs transition hover:ring-2 hover:ring-ink-500', isToday && 'ring-2 ring-ink-600 dark:ring-mint-400', past && !total && 'opacity-40')}
                 style={total > 0 ? { background: `rgba(75,72,201,${intensity})` } : undefined}>
-                <span className={cx('font-display font-semibold', dark && 'text-white')}>{d}</span>
-                {total > 0 && <span className={cx('tnum mt-auto w-full truncate text-[10px] leading-tight', dark ? 'text-white' : 'text-ink-900 dark:text-white')}>{money(total)}</span>}
+                <span className="font-display font-semibold">{d}</span>
+                {total > 0 && <span className="tnum mt-auto w-full truncate text-[10px] leading-tight text-slate-900 dark:text-white">{money(total)}</span>}
                 {entries.length > 1 && <span className="absolute right-1 top-1 size-1.5 rounded-full bg-coral-400" aria-hidden />}
               </button>
             )
           })}
         </div>
-        <p className="mt-2 text-center text-[11px] text-slate-400">{t('cal.hint')}</p>
+        <p className="mt-2 text-center text-[11px] text-slate-500 dark:text-slate-400">{t('cal.hint')}</p>
       </Card>
 
       {noDay.length > 0 && (
@@ -87,7 +87,7 @@ export function CalendarPage({ monthKey, onMonthChange }: { monthKey: string; on
       <Modal open={selected !== null} title={selected ? formatDay(`${monthKey}-${pad2(selected)}`) : ''} onClose={() => { setSelected(null); setAdding(false) }}>
         {selected && !adding && (
           <div className="space-y-3">
-            {selectedEntries.length === 0 ? <p className="text-sm text-slate-500">{t('cal.nothing')}</p> : (
+            {selectedEntries.length === 0 ? <p className="text-sm text-slate-500 dark:text-slate-400">{t('cal.nothing')}</p> : (
               <ul className="divide-y divide-line dark:divide-line-dark">
                 {selectedEntries.map((e) => {
                   const c = categoryById(state, e.categoryId)

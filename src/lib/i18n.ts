@@ -21,7 +21,7 @@ const en = {
   // month nav
   'nav.prevMonth': 'Previous month', 'nav.nextMonth': 'Next month', 'nav.prevYear': 'Previous year', 'nav.nextYear': 'Next year', 'nav.pickMonth': 'Pick a month', 'nav.goToday': 'Go to this month',
   // hero
-  'hero.left': 'Left to spend', 'hero.over': 'Over budget by', 'hero.spentOf': '{spent} spent of {income}', 'hero.spentSetAsideOf': '{spent} spent, {aside} set aside of {income}',
+  'hero.left': 'Left to spend', 'hero.over': 'Over budget by', 'hero.overAside': 'Set aside too much by','hero.spentOf': '{spent} spent of {income}', 'hero.spentSetAsideOf': '{spent} spent, {aside} set aside of {income}',
   'hero.addSalary': 'Add your salary below to start', 'hero.perDay': '{amount} a day for {n} {unit}', 'hero.goalMet': 'Goal met', 'hero.goal': 'Goal', 'hero.keep': 'keep {pct}%', 'hero.now': '({pct} now)',
   'hero.overBudgetOne': '{name} over budget', 'hero.overBudgetMany': '{n} budgets exceeded', 'hero.progress': 'Share of income spent',
   'greet.morning': 'Good morning, {name}', 'greet.afternoon': 'Good afternoon, {name}', 'greet.evening': 'Good evening, {name}',
@@ -128,7 +128,7 @@ const fr: Record<Key, string> = {
   'toast.setAside': '{amount} mis de côté dans {pot}', 'toast.tookOut': '{amount} retiré de {pot}',
   'install.text': 'Installez l’app pour un accès rapide et hors ligne.', 'install.button': 'Installer',
   'nav.prevMonth': 'Mois précédent', 'nav.nextMonth': 'Mois suivant', 'nav.prevYear': 'Année précédente', 'nav.nextYear': 'Année suivante', 'nav.pickMonth': 'Choisir un mois', 'nav.goToday': 'Aller au mois en cours',
-  'hero.left': 'Reste à dépenser', 'hero.over': 'Dépassement de', 'hero.spentOf': '{spent} dépensés sur {income}', 'hero.spentSetAsideOf': '{spent} dépensés, {aside} mis de côté sur {income}',
+  'hero.left': 'Reste à dépenser', 'hero.over': 'Dépassement de', 'hero.overAside': 'Mis de côté en trop','hero.spentOf': '{spent} dépensés sur {income}', 'hero.spentSetAsideOf': '{spent} dépensés, {aside} mis de côté sur {income}',
   'hero.addSalary': 'Saisissez votre salaire ci-dessous pour commencer', 'hero.perDay': '{amount} par jour pendant {n} {unit}', 'hero.goalMet': 'Objectif atteint', 'hero.goal': 'Objectif', 'hero.keep': 'garder {pct} %', 'hero.now': '({pct} actuellement)',
   'hero.overBudgetOne': '{name} : budget dépassé', 'hero.overBudgetMany': '{n} budgets dépassés', 'hero.progress': 'Part du revenu dépensée',
   'greet.morning': 'Bonjour {name}', 'greet.afternoon': 'Bon après-midi {name}', 'greet.evening': 'Bonsoir {name}',
