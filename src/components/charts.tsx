@@ -12,12 +12,12 @@ const KEPT = 'var(--chart-kept)'
 function TooltipBox({ active, payload, label, currency }: { active?: boolean; payload?: { name: string; value: number; color?: string }[]; label?: string; currency: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-lg bg-card px-3 py-2 text-xs shadow-lg ring-1 ring-line dark:bg-card-dark dark:ring-line-dark">
+    <div className="rounded-lg bg-surface px-3 py-2 text-xs shadow-lg ring-1 ring-hairline">
       <div className="mb-1 font-semibold">{label}</div>
       {payload.map((p) => (
         <div key={p.name} className="flex items-center gap-2">
           <span className="size-2 rounded-sm" style={{ background: p.color }} />
-          <span className="text-slate-500 dark:text-slate-400">{p.name}</span>
+          <span className="text-muted">{p.name}</span>
           <span className="ml-auto tabular-nums font-medium">{formatMoney(p.value, currency)}</span>
         </div>
       ))}
@@ -34,7 +34,7 @@ export function TrendChart({ points, currency, highlight }: { points: TrendPoint
   const kIncome = t('chart.income'), kExpenses = t('chart.expenses')
   const data = points.map((p) => ({ key: p.key, label: formatMonth(p.key, 'short'), [kIncome]: p.summary.income, [kExpenses]: p.summary.expenses }))
   return (
-    <div className="h-52 text-slate-500 dark:text-slate-400">
+    <div className="h-56 text-muted">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }} barGap={2} barCategoryGap="25%">
           <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.15} />
@@ -59,7 +59,7 @@ export function YearChart({ points, currency, highlight }: { points: TrendPoint[
   const kKept = t('chart.kept')
   const data = points.map((p) => ({ key: p.key, label: monthName(splitKey(p.key).month), [kKept]: p.summary.income > 0 ? p.summary.kept : 0 }))
   return (
-    <div className="h-44 text-slate-500 dark:text-slate-400">
+    <div className="h-44 text-muted">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.15} />
@@ -82,12 +82,12 @@ export function CategoryDonut({ totals, currency }: { totals: CategoryTotal[]; c
   const top = named.slice(0, 6)
   const rest = totals.filter((t) => !top.includes(t))
   const data = [
-    ...top.map((t) => ({ id: t.category.id, name: `${t.category.icon} ${t.category.name}`, value: t.amount, color: t.category.color })),
-    ...(rest.length ? [{ id: 'folded-other', name: `📦 ${t('ins.other')}`, value: rest.reduce((a, t) => a + t.amount, 0), color: '#94a3b8' }] : []),
+    ...top.map((t) => ({ id: t.category.id, name: t.category.name, value: t.amount, color: t.category.color })),
+    ...(rest.length ? [{ id: 'folded-other', name: t('ins.other'), value: rest.reduce((a, t) => a + t.amount, 0), color: 'var(--color-mist-400)' }] : []),
   ]
   const total = data.reduce((a, d) => a + d.value, 0)
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col items-center gap-4 min-[420px]:flex-row min-[420px]:gap-3">
       <div className="relative h-44 w-44 shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -98,16 +98,16 @@ export function CategoryDonut({ totals, currency }: { totals: CategoryTotal[]; c
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">{t('ins.total')}</span>
+          <span className="text-[11px] text-muted">{t('ins.total')}</span>
           <span className="text-sm font-semibold tabular-nums">{formatMoney(total, currency, { compact: true })}</span>
         </div>
       </div>
-      <ul className="min-w-0 flex-1 space-y-1 text-xs">
+      <ul className="w-full min-w-0 flex-1 space-y-1.5 text-xs">
         {data.map((d) => (
           <li key={d.id} className="flex items-center gap-2">
             <span className="size-2.5 shrink-0 rounded-sm" style={{ background: d.color }} />
-            <span className="truncate">{d.name}</span>
-            <span className="ml-auto shrink-0 tabular-nums text-slate-500 dark:text-slate-400">{Math.round((d.value / total) * 100)}%</span>
+            <span className="min-w-0 truncate">{d.name}</span>
+            <span className="ml-auto shrink-0 tabular-nums text-muted">{Math.round((d.value / total) * 100)}%</span>
           </li>
         ))}
       </ul>

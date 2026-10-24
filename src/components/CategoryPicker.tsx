@@ -7,14 +7,14 @@ export function CategoryPicker({ value, onChange }: { value: string; onChange: (
   const { categories } = useAppState()
   const t = useT()
   return (
-    <div className="grid grid-cols-4 gap-1.5" role="radiogroup" aria-label={t('form.category')}>
+    <div className="grid grid-cols-3 gap-1.5 min-[400px]:grid-cols-4" role="radiogroup" aria-label={t('form.category')}>
       {categories.map((c) => {
         const selected = c.id === value
         return (
           <button key={c.id} type="button" role="radio" aria-checked={selected} onClick={() => onChange(c.id)}
-            className={cx('flex flex-col items-center gap-1 rounded-xl border p-1.5 text-[11px] leading-tight transition', selected ? 'border-ink-500 bg-ink-50 font-semibold text-ink-700 dark:bg-ink-500/20 dark:text-ink-100' : 'border-transparent hover:bg-slate-900/5 dark:hover:bg-white/10')}>
+            className={cx('flex flex-col items-center gap-1 rounded-xl border p-1.5 text-[11px] leading-tight transition', selected ? 'border-deep-900 bg-surface font-semibold text-ink shadow-[0_2px_8px_-4px_rgb(5_10_18/0.25)] dark:border-tide-300 dark:bg-tide-300/10' : 'border-transparent hover:bg-sunk')}>
             <CategoryDot icon={c.icon} color={c.color} size="sm" />
-            <span className="w-full truncate text-center">{categoryName(c.id, c.name)}</span>
+            <span className="line-clamp-2 w-full break-words text-center">{categoryName(c.id, c.name)}</span>
           </button>
         )
       })}

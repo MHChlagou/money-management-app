@@ -48,7 +48,7 @@ export function RecurringForm({ initial, onSave, onCancel }: Props) {
       <Field label={t('form.name')}>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('form.namePlaceholder')} autoFocus required />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
         <Field label={t('form.amount')}><AmountInput value={amount} onChange={setAmount} required /></Field>
         <Field label={t('form.billed')}>
           <Select value={interval} onChange={(e) => setInterval(Number(e.target.value))}>
@@ -56,7 +56,7 @@ export function RecurringForm({ initial, onSave, onCancel }: Props) {
           </Select>
         </Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
         <Field label={t('form.type')}>
           <Select value={kind} onChange={(e) => setKind(e.target.value as RecurringKind)}>
             {KINDS.map((k) => <option key={k} value={k}>{kindLabel(k)}</option>)}
@@ -67,13 +67,13 @@ export function RecurringForm({ initial, onSave, onCancel }: Props) {
         </Field>
       </div>
       <Field label={t('form.category')}><CategoryPicker value={categoryId} onChange={setCategoryId} /></Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
         <Field label={interval > 1 ? t('form.firstCharge') : t('form.fromMonth')}>
           <Input type="month" value={startMonth} onChange={(e) => setStartMonth(e.target.value)} required />
         </Field>
         <Field label={t('form.untilMonth')} hint={hasEnd ? t('form.inclusive') : t('form.openEnded')}>
           <div className="flex items-center gap-2">
-            <input type="checkbox" checked={hasEnd} onChange={(e) => { setHasEnd(e.target.checked); if (e.target.checked && !endMonth) setEndMonth(startMonth) }} className="size-5 accent-ink-600" aria-label={t('form.hasEnd')} />
+            <input type="checkbox" checked={hasEnd} onChange={(e) => { setHasEnd(e.target.checked); if (e.target.checked && !endMonth) setEndMonth(startMonth) }} className="size-5 accent-tide-600" aria-label={t('form.hasEnd')} />
             <Input type="month" value={endMonth} onChange={(e) => setEndMonth(e.target.value)} disabled={!hasEnd} min={startMonth} />
           </div>
         </Field>

@@ -20,9 +20,9 @@ export function WelcomeSheet() {
   return (
     <Modal open title={t('welcome.title')} onClose={() => finish(false)}>
       <form onSubmit={(e) => { e.preventDefault(); finish(true) }} className="space-y-4">
-        <p className="text-sm text-slate-600 dark:text-slate-300">{t('welcome.intro')}</p>
+        <p className="text-sm text-ink/80">{t('welcome.intro')}</p>
         <div>
-          <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300" id="welcome-language">{t('welcome.language')}</span>
+          <span className="mb-1 block text-sm font-medium text-ink/80" id="welcome-language">{t('welcome.language')}</span>
           <div className="pt-1" aria-labelledby="welcome-language">
             <Segmented<Language> value={state.language} onChange={(language) => setState((s) => ({ ...s, language }))} options={[{ value: 'en', label: 'English' }, { value: 'fr', label: 'Français' }]} />
           </div>
@@ -37,7 +37,7 @@ export function WelcomeSheet() {
         </Field>
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" onClick={() => finish(false)}>{t('welcome.skip')}</Button>
-          <Button type="submit" variant="mint">{t('welcome.start')}</Button>
+          <Button type="submit" variant="tide">{t('welcome.start')}</Button>
         </div>
       </form>
     </Modal>

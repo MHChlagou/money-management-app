@@ -128,7 +128,7 @@ export const emptyState = (): AppState => ({
   currency: 'EUR',
   savingsGoalPct: 20,
   defaultSalary: 0,
-  theme: 'system',
+  theme: 'dark',
   language: typeof navigator !== 'undefined' && /^fr\b/i.test(navigator.language) ? 'fr' : 'en',
   onboarded: false,
   categories: DEFAULT_CATEGORIES.map((c) => ({ ...c })),

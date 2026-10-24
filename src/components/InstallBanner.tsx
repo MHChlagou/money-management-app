@@ -22,11 +22,11 @@ export function InstallBanner() {
 
   if (!evt || hidden) return null
   return (
-    <div className="mb-3 flex items-center gap-3 rounded-2xl border border-line bg-card p-3 text-sm dark:border-line-dark dark:bg-card-dark">
-      <Download size={18} className="shrink-0 text-ink-600 dark:text-ink-200" />
+    <div className="mb-3 flex items-center gap-3 rounded-2xl bg-surface p-3 text-sm ring-1 ring-hairline">
+      <Download size={18} className="shrink-0 text-tide-700 dark:text-tide-300" />
       <div className="flex-1">{t('install.text')}</div>
       <Button className="min-h-8 px-3" onClick={async () => { await evt.prompt(); setEvt(null) }}>{t('install.button')}</Button>
-      <button aria-label={t('common.dismiss')} className="relative p-1 text-slate-500 after:absolute after:-inset-2.5 after:content-[''] dark:text-slate-400" onClick={() => { sessionStorage.setItem('install-dismissed', '1'); setHidden(true) }}><X size={16} /></button>
+      <button aria-label={t('common.dismiss')} className="relative p-1 text-muted after:absolute after:-inset-2.5 after:content-[''] dark:text-mist-400" onClick={() => { sessionStorage.setItem('install-dismissed', '1'); setHidden(true) }}><X size={16} /></button>
     </div>
   )
 }

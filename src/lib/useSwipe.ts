@@ -6,7 +6,7 @@ export const useSwipe = (onLeft: () => void, onRight: () => void) => {
   return {
     onTouchStart: (e: React.TouchEvent) => {
       // Ignore gestures inside dialogs, inputs and charts so they never flip the month behind them.
-      if ((e.target as Element).closest('[role="dialog"], [role="presentation"], input, select, textarea, .recharts-wrapper')) { start.current = null; return }
+      if ((e.target as Element).closest('[role="dialog"], [role="presentation"], [data-no-swipe], input, select, textarea, .recharts-wrapper')) { start.current = null; return }
       start.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
     },
     onTouchEnd: (e: React.TouchEvent) => {

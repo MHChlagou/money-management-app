@@ -10,7 +10,7 @@ export function ConfirmHost() {
     <Modal open={request !== null} title={t('confirm.title')} onClose={() => answerConfirm(false)}>
       {request && (
         <div className="space-y-4">
-          <p className="text-sm text-slate-600 dark:text-slate-300">{request.message}</p>
+          <p className="text-sm text-ink/80">{request.message}</p>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" autoFocus onClick={() => answerConfirm(false)}>{t('common.cancel')}</Button>
             <Button type="button" variant={request.danger ? 'danger' : 'primary'} onClick={() => answerConfirm(true)}>{request.confirmLabel}</Button>

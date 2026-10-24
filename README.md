@@ -1,4 +1,4 @@
-# Monthly Money
+# Reserve
 
 A personal, offline-first money tracker. Enter your salary each month, configure your
 recurring costs once (subscriptions, credits, bills), and see how much is left and where to
